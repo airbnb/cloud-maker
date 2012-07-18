@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'thor'
+require 'yaml'
+require 'pry'
+
+
+class CloudMaker < Thor                                                 # [1]
+  desc "launch [INSTANCE_CONFIG_YAML]", "launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
+  def launch(instance_config_yaml)
+    config = YAML::load(File.open(instance_config_yaml))
+    binding.pry
+    puts config.inspect
+  end
+end
+
+CloudMaker.start

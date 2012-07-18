@@ -1,0 +1,10 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    thor (0.15.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  thor
