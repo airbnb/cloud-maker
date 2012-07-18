@@ -1,0 +1,70 @@
+#cloud-maker
+cloud_maker:
+- ami: 'ami-82fa58eb'
+- instance_type: 'c1.xlarge'
+- availability_zone: 'us-east-1b'
+- key_pair: 'ops.2011-12-21'
+- elastic_ip: '107.21.101.115'
+- security_group: 'default'
+- group: 'zookeeper'
+- environment_variables:
+  - zk:
+    - default: 0
+    - required: true
+
+
+#cloud-config
+timezone: UTC
+locale: en_US.UTF-8                                     # Cloud config default.
+mounts:
+- [ ephemeral0, /tmp, auto, 'defaults,nobootwait,noatime', '0', '2' ]
+
+apt_sources:
+- source: 'ppa:ferramroberto/java'
+- source: 'ppa:awstools-dev/awstools'
+- source: 'ppa:chris-lea/node.js'
+- source: 'ppa:nginx/development'
+apt_update: true            # Update package indexes (not packages themselves).
+debconf_selections: |
+  sun-java6-bin   shared/accepted-sun-dlj-v1-1    boolean true
+  sun-java6-jdk   shared/accepted-sun-dlj-v1-1    boolean true
+  sun-java6-jre   shared/accepted-sun-dlj-v1-1    boolean true
+packages:
+- libtool
+- python-dev
+- htop
+- pv
+- ntp
+- git
+- sysstat
+- sun-java6-jdk
+- ec2-api-tools
+- nginx-extras
+- nginx-doc
+- monit
+- npm
+- ghc
+- cabal-install
+- runit
+- socklog
+
+sethostname_to_instance_id:
+- &sethostname_to_instance_id |
+  id="$(curl -f -s http://169.254.169.254/latest/meta-data/instance-id)"
+  <<<$'\n# Instance ID\n127.0.0.1 '"$id" cat >> /etc/hosts
+  hostname "$id"
+  echo "$id" > /etc/hostname
+runcmd:
+- [ /etc/init.d/monit, stop ]
+- [ chmod, '1777', /tmp ] # Uniform access, sticky bit.
+- [ bash, -e, -u, -c, *sethostname_to_instance_id ]
+- [ restart, rsyslog ] # Cause new hostname to take effect.
+- [ usermod, -aG, www-data, ubuntu ]
+- [ mkdir, -p, /srv/ws ]
+- [ chown, -R, 'www-data:www-data', /srv/ws ]
+- [ chmod, 'u+rwx,g+rwsx', /srv/ws ]
+- [ gem, install, rubygems-update ]
+- [ update_rubygems ]
+- [ gem, install, bundler, unicorn, rake ]
+- [ npm, install, -g, fugue, coffee-script, mustache ]
+
