@@ -7,9 +7,8 @@ cloud_maker:
   elastic_ip: '107.21.101.115'
   security_group: 'default'
   group: 'zookeeper'
-  environment_variables:
-    zk:
-      required: true
+  zk:
+    required: true
 
 #cloud-config
 timezone: UTC
