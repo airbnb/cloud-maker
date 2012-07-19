@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'thor'
+require 'yaml'
+require './lib/cloud_maker.rb'
+require 'pry'
+
+
+class CloudMakerCLI < Thor
+  desc "launch [INSTANCE_CONFIG_YAML]", "launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
+  def launch(instance_config_yaml)
+    puts "---------------------------"
+    puts "Launching new EC2 instance"
+    puts "---------------------------\n"
+
+
+
+    # params = {}
+    # params[:max_count] = options.max_count
+    # params[:user_data] = user_data
+    # params[:availability_zone] = options.zone || ZONES.sample
+    # params.merge!(NEW_EC2_DEFAULTS)
+
+    # print_table params
+
+    # if yes?("\nAre you sure you want #{params[:max_count]} of the above instance(s)? (Y/N):", :red)
+    #   ec2 = RightAws::Ec2.new(AWS_ID, AWS_KEY)
+    #   instances = ec2.launch_instances(NEW_EC2_DEFAULTS[:image_id], params)
+    #   instances = {:aws_product_codes=>[], :groups=>[{:group_id=>"sg-f19f7498", :group_name=>"Web Server"}], :tags=>{}, :aws_instance_id=>"i-8ced65f4", :aws_image_id=>"ami-2200df4b", :aws_state_code=>0, :aws_state=>"pending", :private_dns_name=>"", :dns_name=>"", :aws_reason=>"", :ssh_key_name=>"ops.2011-12-21", :ami_launch_index=>"0", :aws_instance_type=>"m1.small", :aws_launch_time=>"2012-07-11T22:39:04.000Z", :aws_availability_zone=>"us-east-1a", :placement_tenancy=>"default", :aws_kernel_id=>"aki-427d952b", :monitoring_state=>"disabled", :state_reason_code=>"pending", :state_reason_message=>"pending", :architecture=>"x86_64", :root_device_type=>"instance-store", :virtualization_type=>"paravirtual", :client_token=>"1342046343-683757-isj1u-AWguV-axIbi-uazFj", :hypervisor=>"xen", :aws_owner=>"172631448019", :aws_reservation_id=>"r-b7333ad2"}
+
+    #   if instances.is_a?(Array)
+    #     instance_ids = instances.map {|i| i[:aws_instance_id]}
+    #   else
+    #     instance_ids = instances[:aws_instance_id]
+    #   end
+
+    #   say("\n==============================================", :green)
+    #   say("Created the following instance(s): #{instance_ids}", :green)
+    #   say("==============================================\n", :green)
+
+    #   if yes?("Would you like to see all the details? (Y/N)")
+    #     data = instances.is_a?(Array) ? instances.first : instances
+    #     print_table data
+    #   end
+
+    #   result = ec2.create_tags(instance_ids, EC2_TAGS[:app_server])
+    #   result = true
+    #   raise "Error creating tags. Kill these instances: #{instance_ids}" unless result
+
+    #   say "Operation completed successfully."
+    # end
+
+    cloud_maker = CloudMaker.from_yaml(instance_config_yaml)
+
+    cloud_maker.config['AWS_ACCESS_KEY_ID'] ||= ENV['AWS_ACCESS_KEY_ID']
+    cloud_maker.config['AWS_SECRET_ACCESS_KEY'] ||= ENV['AWS_SECRET_ACCESS_KEY']
+
+    cloud_maker.launch
+  end
+end
+
+CloudMakerCLI.start

@@ -1,17 +1,15 @@
 #cloud-maker
 cloud_maker:
-- ami: 'ami-82fa58eb'
-- instance_type: 'c1.xlarge'
-- availability_zone: 'us-east-1b'
-- key_pair: 'ops.2011-12-21'
-- elastic_ip: '107.21.101.115'
-- security_group: 'default'
-- group: 'zookeeper'
-- environment_variables:
-  - zk:
-    - default: 0
-    - required: true
-
+  ami: 'ami-82fa58eb'
+  instance_type: 'c1.xlarge'
+  availability_zone: 'us-east-1b'
+  key_pair: 'ops.2011-12-21'
+  elastic_ip: '107.21.101.115'
+  security_group: 'default'
+  group: 'zookeeper'
+  environment_variables:
+    zk:
+      required: true
 
 #cloud-config
 timezone: UTC
@@ -67,4 +65,3 @@ runcmd:
 - [ update_rubygems ]
 - [ gem, install, bundler, unicorn, rake ]
 - [ npm, install, -g, fugue, coffee-script, mustache ]
-
