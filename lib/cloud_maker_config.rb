@@ -15,12 +15,28 @@ class CloudMakerConfig
     self.cloud_config = cloud_config
   end
 
+  def to_user_data
+    env_run_cmds = []
+    self.options.each_pair do |key, properties|
+      if properties[:environment] && !properties[:value].nil?
+        escaped_value = properties[:value].to_s.gsub(/"/, '\\\\\\\\\"')
+        env_run_cmds.push "echo \"#{key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
+      end
+    end
+
+    user_data_config = self.cloud_config.dup
+    user_data_config['runcmd'] ||= []
+    user_data_config['runcmd'] = env_run_cmds.concat(user_data_config['runcmd'])
+    return "#cloud-config\n#{user_data_config.to_yaml}"
+  end
+
+
   def [](key)
-    self.options[key]
+    self.options[key][:value]
   end
 
   def []=(key, val)
-    self.options[key] = val
+    self.options[key][:value] = val
   end
 
   def inspect

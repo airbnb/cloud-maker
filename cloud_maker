@@ -8,7 +8,7 @@ require 'pry'
 
 
 class CloudMakerCLI < Thor
-  desc "launch [INSTANCE_CONFIG_YAML]", "launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
+  desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
 
   method_option :aws_access_key_id, :desc => "Your AWS access key id, if not provided $AWS_ACCESS_KEY_ID will be used."
   method_option :aws_secret_access_key, :desc => "Your AWS secret access key, if not provided $AWS_SECRET_ACCESS_KEY will be used."
@@ -16,8 +16,6 @@ class CloudMakerCLI < Thor
     puts "---------------------------"
     puts "Launching new EC2 instance"
     puts "---------------------------\n"
-
-
 
     # params = {}
     # params[:max_count] = options.max_count

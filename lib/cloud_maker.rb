@@ -12,7 +12,22 @@ class CloudMaker
 
   def launch
     ec2 = RightAws::Ec2.new(self.aws_access_key_id, self.aws_secret_access_key)
+
+    user_data = self.config.to_user_data
+
+    output = File.open('generated-cloud-config.yaml', 'w')
+    output.puts user_data
+
+    response = ec2.launch_instances(config['ami'],
+      :group_names => config['security_group'],
+      :instance_type => config['instance_type'],
+      :key_name => config['key_pair'],
+      :user_data => user_data
+    )
+
+    puts response.inspect
     binding.pry
+
   end
 
   def valid?
