@@ -1,4 +1,6 @@
+require 'yaml'
 require './lib/cloud_maker_config'
+require './lib/shell_executor'
 require 'right_aws'
 
 class CloudMaker

@@ -1,7 +1,7 @@
 #cloud-maker
 cloud_maker:
   ami: 'ami-82fa58eb'
-  instance_type: 'c1.xlarge'
+  instance_type: 'm1.small'
   availability_zone: 'us-east-1b'
   key_pair: 'ops.2011-12-21'
   elastic_ip: '107.21.101.115'
@@ -9,6 +9,8 @@ cloud_maker:
   group: 'zookeeper'
   zk:
     required: true
+  launcher_hostname: !shell-script hostname
+
 
 #cloud-config
 timezone: UTC
