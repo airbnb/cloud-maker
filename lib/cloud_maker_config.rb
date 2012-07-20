@@ -89,6 +89,17 @@ class CloudMakerConfig
   end
 
   def extract_includes!(config)
-    config.delete('include') || []
+    includes = config.delete('include')
+
+    #if we didn't specify it just use a blank array
+    if includes.nil?
+      includes = []
+    #if we passed something other than an array turn it into a string and split it up into urls
+    elsif !includes.kind_of?(Array)
+      includes = includes.to_s.split("\n")
+      includes.reject! {|line| line.strip[0] == "#" || line.strip.empty?}
+    end
+
+    includes
   end
 end

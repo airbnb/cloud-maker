@@ -11,8 +11,7 @@ cloud_maker:
     required: true
   launcher_hostname: !shell-script hostname
 
-include:
-- |
+include: !shell-script (cd ~/src/cloud-config; ./s3dist include ssh-keys/keys.arx)
 
 #cloud-config
 timezone: UTC
@@ -48,10 +47,6 @@ packages:
 - cabal-install
 - runit
 - socklog
-
-ssh_authorized_keys:
-  - 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAyUw5bdA84GrTOOwTAWELOW80Rp5uju25p2DgSP6cBvLEhvuv+aUDtByo8LEOLWwJW2jIeRpUA9qHVvwBtCRSR0KYNbektGJsukdlW0lFM8zocoscBGjp66BJHMZX0rah3f46hRudGcn9QPpqcHyNIiBazEo3ynolyLOudn4wfeN1iytrUE+MH1jFehDCGCoZJHj4UEDbFc7MlMe1+snjZsGq5aFVvtnFrN8K1Lkw6qDsuxkVu7jzbci4r3Erh7rYjX7bLmsgDEIdHmDNmzCdBWgl5+QI6t77Zq4gPeoA7YiJxQdR5sAjsbumkqUUX4vUUNKEHT3twbdqXudpqRxkYw== Nathan Baxter'
-
 
 sethostname_to_instance_id:
 - &sethostname_to_instance_id |
