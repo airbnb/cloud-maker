@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+require 'thor'
+require 'cloud-maker'
+
+class CloudMakerCLI < Thor
+  desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
+
+  method_option :aws_access_key_id, :desc => "Your AWS access key id, if not provided $AWS_ACCESS_KEY_ID will be used."
+  method_option :aws_secret_access_key, :desc => "Your AWS secret access key, if not provided $AWS_SECRET_ACCESS_KEY will be used."
+  def launch(instance_config_yaml)
+    puts "---------------------------"
+    puts "Launching new EC2 instance"
+    puts "---------------------------\n"
+
+    cloud_maker = CloudMaker::Ec2.from_yaml(
+      instance_config_yaml,
+      :aws_access_key_id => options.aws_access_key_id || ENV['AWS_ACCESS_KEY_ID'],
+      :aws_secret_access_key => options.aws_access_key_id || ENV['SECRET_ACCESS_KEY_ID']
+    )
+
+    cloud_maker.launch
+  end
+end
+
+CloudMakerCLI.start
