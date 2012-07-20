@@ -28,8 +28,6 @@ class CloudMaker
     )
 
     puts response.inspect
-    binding.pry
-
   end
 
   def valid?
