@@ -1,3 +1,8 @@
+PATH
+  remote: .
+  specs:
+    cloud-maker (0.0.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -10,5 +15,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  cloud-maker!
   right_aws
   thor
