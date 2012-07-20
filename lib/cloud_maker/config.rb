@@ -1,6 +1,8 @@
+require 'pry'
+
 module CloudMaker
   class Config
-    attr_accessor :options, :cloud_config, :includes
+    attr_accessor :options, :cloud_config, :includes, :extra_options
 
     CLOUD_CONFIG_HEADER = %Q|Content-Type: text/cloud-config; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nContent-Disposition: attachment; filename="cloud-config.yaml"\n\n|
     INCLUDES_HEADER = %Q|Content-Type: text/x-include-url; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nContent-Disposition: attachment; filename="includes.txt"\n\n|
@@ -14,13 +16,27 @@ module CloudMaker
       :value => nil
     }
 
-    def initialize(cloud_config)
+    def initialize(cloud_config, extra_options)
+      self.extra_options = extra_options
       cloud_config = cloud_config.dup
       self.options = extract_cloudmaker_config!(cloud_config)
       self.includes = extract_includes!(cloud_config)
       self.cloud_config = cloud_config
     end
 
+    def valid?
+      self.options.all? {|key, option| !(option["required"] && option["value"].nil?)}
+    end
+
+    def missing_values
+      self.options.select {|key, option| option["required"] && option["value"].nil?}.map(&:first).map(&:dup)
+    end
+
+    def to_hash
+      self.options.map {|key, properties| [key, properties[:value]]}
+    end
+
+    # generates a multipart userdata string suitable for use with EC2
     def to_user_data
       # build a multipart document
       parts = []
@@ -28,6 +44,7 @@ module CloudMaker
       parts.push(CLOUD_CONFIG_HEADER + cloud_config_data)
       parts.push(INCLUDES_HEADER + includes_data)
 
+      #not that it's likely but lets make sure that we don't choose a boundary that exists in the document.
       boundary = ''
       while parts.any? {|part| part.index(boundary)}
         boundary = "===============#{rand(8999999999999999999) + 1000000000000000000}=="
@@ -70,6 +87,20 @@ module CloudMaker
     def inspect
       "CloudMakerConfig#{self.options.inspect}"
     end
+
+    class << self
+      def from_yaml(instance_config_yaml)
+        begin
+          full_path = File.expand_path(instance_config_yaml)
+          cloud_yaml = File.open(full_path, "r") #Right_AWS will base64 encode this for us
+        rescue
+          raise "ERROR: The path to the CloudMaker config is incorrect"
+        end
+
+        CloudMaker::Config.new(YAML::load(cloud_yaml), :config_path => full_path)
+      end
+    end
+
 
 
     private
