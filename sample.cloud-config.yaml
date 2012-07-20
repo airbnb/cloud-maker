@@ -11,6 +11,8 @@ cloud_maker:
     required: true
   launcher_hostname: !shell-script hostname
 
+include:
+- |
 
 #cloud-config
 timezone: UTC
