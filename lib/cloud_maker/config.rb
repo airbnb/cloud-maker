@@ -11,9 +11,9 @@ module CloudMaker
     # If you don't specify a property associated with a key in the cloud_maker config file
     # we will use these properties to fill in the blanks
     DEFAULT_KEY_PROPERTIES = {
-      :environment => true,
-      :required => false,
-      :value => nil
+      "environment" => true,
+      "required" => false,
+      "value" => nil
     }
 
     def initialize(cloud_config, extra_options)
@@ -33,7 +33,7 @@ module CloudMaker
     end
 
     def to_hash
-      self.options.map {|key, properties| [key, properties[:value]]}
+      self.options.map {|key, properties| [key, properties["value"]]}
     end
 
     # generates a multipart userdata string suitable for use with EC2
@@ -59,8 +59,8 @@ module CloudMaker
     def cloud_config_data
       env_run_cmds = []
       self.options.each_pair do |key, properties|
-        if properties[:environment] && !properties[:value].nil?
-          escaped_value = properties[:value].to_s.gsub(/"/, '\\\\\\\\\"')
+        if properties["environment"] && !properties["value"].nil?
+          escaped_value = properties["value"].to_s.gsub(/"/, '\\\\\\\\\"')
           env_run_cmds.push "echo \"#{key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
         end
       end
@@ -77,11 +77,11 @@ module CloudMaker
     end
 
     def [](key)
-      self.options[key][:value]
+      self.options[key]["value"]
     end
 
     def []=(key, val)
-      self.options[key][:value] = val
+      self.options[key]["value"] = val
     end
 
     def inspect
@@ -111,7 +111,7 @@ module CloudMaker
         #if key is set to anything but a hash then we treat it as the value property
         if !cloud_maker_config[key].kind_of?(Hash)
           cloud_maker_config[key] = {
-            :value => cloud_maker_config[key]
+            "value" => cloud_maker_config[key]
           }
         end
 

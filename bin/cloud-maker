@@ -7,14 +7,26 @@ class CloudMakerCLI < Thor
   include Thor::Actions
 
   desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
-  method_option :aws_access_key_id, :desc => "Your AWS access key id, if not provided $AWS_ACCESS_KEY_ID will be used."
-  method_option :aws_secret_access_key, :desc => "Your AWS secret access key, if not provided $AWS_SECRET_ACCESS_KEY will be used."
+  method_option :aws_access_key_id,
+    :desc => "Your AWS access key id",
+    :default => ENV['AWS_ACCESS_KEY_ID'],
+    :required => true
+  method_option :aws_secret_access_key,
+    :desc => "Your AWS secret access key",
+    :default => ENV['AWS_SECRET_ACCESS_KEY'],
+    :required => true
+  method_option :set,
+    :alias => '-s',
+    :type => :hash,
+    :default => {},
+    :desc => "Set parameters in the CloudMaker config"
   def launch(instance_config_yaml)
     puts "---------------------------"
     puts "Launching new EC2 instance"
     puts "---------------------------\n"
 
     config = CloudMaker::Config.from_yaml(instance_config_yaml)
+    options.set.each_pair {|key, val| config[key] = val}
 
     if !config.valid?
       say "Before an instance can be launched we need a few more values to be specified.".yellow
@@ -30,8 +42,8 @@ class CloudMakerCLI < Thor
     end
 
     cloud_maker = CloudMaker::Ec2.new(config,
-      :aws_access_key_id => options.aws_access_key_id || ENV['AWS_ACCESS_KEY_ID'],
-      :aws_secret_access_key => options.aws_access_key_id || ENV['SECRET_ACCESS_KEY_ID']
+      :aws_access_key_id => options.aws_access_key_id,
+      :aws_secret_access_key => options.aws_access_key_id
     )
 
     if (!config.includes.empty?)
@@ -64,7 +76,7 @@ class CloudMakerCLI < Thor
   end
 
   desc "scratch", "Play with Thor"
-  def scratch
+  def scratch(arg1)
     say 'hello'
     say 'hello in red'.red
   end
