@@ -1,4 +1,3 @@
-require 'yaml'
 require 'right_aws'
 
 module CloudMaker
@@ -24,15 +23,29 @@ module CloudMaker
         :instance_type => config['instance_type'],
         :key_name => config['key_pair'],
         :user_data => user_data
-      )
       ).first
 
       instance_id = instance[:aws_instance_id]
 
-      ec2.associate_address(instance_id, self.config["elastic_ip"]) if (self.config["elastic_ip"])
       puts "Launched instance: #{instance_id.to_s.on_light_blue}"
-      ec2.associate_address(instance_id, :public_ip => self.config["elastic_ip"]) if (self.config["elastic_ip"])
+
       ec2.create_tags(instance_id, self.config["tags"]) if self.config["tags"]
+
+      if (self.config["elastic_ip"])
+        #we can't associate IPs while the state is pending
+        while instance[:aws_state] == 'pending'
+          print '.'
+          STDOUT.flush
+          #this is going to hammer EC2 a bit, it might be necessary to add some delay in here
+          instance = ec2.describe_instances([instance_id]).first
+        end
+
+        ec2.associate_address(instance_id, :public_ip => self.config["elastic_ip"])
+      end
+
+
+      archiver = S3Archiver.new(self.config, instance, :aws_access_key_id => self.aws_access_key_id, :aws_secret_access_key => self.aws_secret_access_key)
+      archiver.store_archive
 
       instance
     end

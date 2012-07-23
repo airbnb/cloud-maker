@@ -8,6 +8,7 @@ cloud_maker:
   security_group: 'default'
   tags:
     group: 'zookeeper'
+  s3_archive_bucket: 'abb-conf'
   zk:
     required: true
     description: "The ID of the zookeeper instance - it should correspond to the DNS entry in the zookeeper config"

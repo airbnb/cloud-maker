@@ -2,6 +2,7 @@
 require 'thor'
 require 'colorize'
 require 'cloud-maker'
+# require 'pry'
 
 class CloudMakerCLI < Thor
   include Thor::Actions
@@ -47,7 +48,7 @@ class CloudMakerCLI < Thor
 
     cloud_maker = CloudMaker::Ec2.new(config,
       :aws_access_key_id => options.aws_access_key_id,
-      :aws_secret_access_key => options.aws_access_key_id
+      :aws_secret_access_key => options.aws_secret_access_key
     )
 
     if (!config.includes.empty?)
@@ -67,11 +68,11 @@ class CloudMakerCLI < Thor
     puts
 
     if yes?("Launch a new EC2 instance with the options above? (y/n)")
-      response = cloud_maker.launch.first
+      instance = cloud_maker.launch
       puts
-      say "Successfully launched new EC2 instance: ".green + response[:aws_instance_id].magenta
+      say "Successfully launched new EC2 instance: ".green + instance[:aws_instance_id].magenta
       puts
-      print_table response.map {|key, val|
+      print_table instance.map {|key, val|
         [key.to_s.cyan, val.to_s]
       }
     else

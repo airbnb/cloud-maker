@@ -98,6 +98,12 @@ module CloudMaker
       self.options.map {|key, properties| [key, properties["value"]]}
     end
 
+    # Public: Generate an archive of the cloudmaker configuration
+    #
+    # Returns an IO object containing the archive.
+    def to_archive
+      StringIO.new("my archive")
+    end
 
     # Public: Generates a multipart userdata string suitable for use with Cloud Init on EC2
     #
@@ -152,7 +158,7 @@ module CloudMaker
     #
     # Returns the value property for options[key]
     def [](key)
-      self.options[key]["value"]
+      self.options[key] ? self.options[key]["value"] : nil
     end
 
     # Public: Sets the value property for key in the cloudmaker options hash
@@ -162,7 +168,12 @@ module CloudMaker
     #
     # Returns val
     def []=(key, val)
-      self.options[key]["value"] = val
+      if (self.options[key])
+        self.options[key]["value"] = val
+      else
+        self.options[key] = DEFAULT_KEY_PROPERTIES.merge('value' => val)
+      end
+      val
     end
 
     # Returns a String representation of the CloudMaker config
