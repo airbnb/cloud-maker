@@ -1,5 +1,3 @@
-require 'pry'
-
 module CloudMaker
   class Config
     attr_accessor :options, :cloud_config, :includes, :extra_options
@@ -109,7 +107,7 @@ module CloudMaker
       cloud_maker_config = config.delete('cloud_maker') || {}
       cloud_maker_config.keys.each do |key|
         #if key is set to anything but a hash then we treat it as the value property
-        if !cloud_maker_config[key].kind_of?(Hash)
+        if !advanced_config?(cloud_maker_config[key])
           cloud_maker_config[key] = {
             "value" => cloud_maker_config[key]
           }
@@ -118,6 +116,13 @@ module CloudMaker
         cloud_maker_config[key] = DEFAULT_KEY_PROPERTIES.merge(cloud_maker_config[key])
       end
       cloud_maker_config
+    end
+
+    #looks at a property value to determine if it's just a value or if we've put extra config info into it
+    #the heuristic it uses to determine an advanced config is that it must be a hash and have at least
+    #one of the same keys as DEFAULT_KEY_PROPERTIES
+    def advanced_config?(value)
+      value.kind_of?(Hash) && !(DEFAULT_KEY_PROPERTIES.keys & value.keys).empty?
     end
 
     def extract_includes!(config)
