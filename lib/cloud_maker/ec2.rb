@@ -19,12 +19,18 @@ module CloudMaker
       output = File.open('generated-cloud-config.yaml', 'w')
       output.puts user_data
 
-      ec2.launch_instances(config['ami'],
+      instance = ec2.launch_instances(config['ami'],
         :group_names => config['security_group'],
         :instance_type => config['instance_type'],
         :key_name => config['key_pair'],
         :user_data => user_data
       )
+
+      instance_id = instance[:aws_instance_id]
+
+      ec2.associate_address(instance_id, self.config["elastic_ip"]) if (self.config["elastic_ip"])
+
+      instance
     end
 
     def valid?
