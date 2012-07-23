@@ -29,6 +29,7 @@ module CloudMaker
       instance_id = instance[:aws_instance_id]
 
       ec2.associate_address(instance_id, self.config["elastic_ip"]) if (self.config["elastic_ip"])
+      ec2.create_tags(instance_id, self.config["tags"]) if self.config["tags"]
 
       instance
     end

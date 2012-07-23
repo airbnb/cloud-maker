@@ -6,7 +6,8 @@ cloud_maker:
   key_pair: 'ops.2011-12-21'
   elastic_ip: '107.21.101.115'
   security_group: 'default'
-  group: 'zookeeper'
+  tags:
+    group: 'zookeeper'
   zk:
     required: true
     description: "The ID of the zookeeper instance - it should correspond to the DNS entry in the zookeeper config"
