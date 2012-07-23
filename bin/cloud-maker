@@ -34,6 +34,10 @@ class CloudMakerCLI < Thor
       puts
 
       config.missing_values.each do |key|
+        config[key] = ENV[key] if ENV[key]
+      end
+
+      config.missing_values.each do |key|
         if (config.options[key]["description"])
           say config.options[key]["description"]
         end
