@@ -25,10 +25,13 @@ module CloudMaker
         :key_name => config['key_pair'],
         :user_data => user_data
       )
+      ).first
 
       instance_id = instance[:aws_instance_id]
 
       ec2.associate_address(instance_id, self.config["elastic_ip"]) if (self.config["elastic_ip"])
+      puts "Launched instance: #{instance_id.to_s.on_light_blue}"
+      ec2.associate_address(instance_id, :public_ip => self.config["elastic_ip"]) if (self.config["elastic_ip"])
       ec2.create_tags(instance_id, self.config["tags"]) if self.config["tags"]
 
       instance
