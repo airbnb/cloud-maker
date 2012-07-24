@@ -29,6 +29,8 @@ module CloudMaker
     CLOUD_CONFIG_HEADER = %Q|Content-Type: text/cloud-config; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nContent-Disposition: attachment; filename="cloud-config.yaml"\n\n|
     # Internal: A mime header for the includes section of the user data
     INCLUDES_HEADER = %Q|Content-Type: text/x-include-url; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nContent-Disposition: attachment; filename="includes.txt"\n\n|
+    # Internal: A mime header for the Cloud Boothook section of the user data
+    BOOTHOOK_HEADER = %Q|Content-Type: text/cloud-boothook; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nContent-Disposition: attachment; filename="boothook.sh"\n\n|
     # Internal: A multipart mime header for describing the entire user data
     # content. It includes a placeholder for the boundary text '___boundary___'
     # that needs to be replaced in the actual mime document.
@@ -105,6 +107,7 @@ module CloudMaker
       # build a multipart document
       parts = []
 
+      parts.push(BOOTHOOK_HEADER + boothook_data)
       parts.push(CLOUD_CONFIG_HEADER + cloud_config_data)
       parts.push(INCLUDES_HEADER + includes_data)
 
@@ -123,18 +126,25 @@ module CloudMaker
     #
     # Returns a String containing the cloud init configuration in YAML format
     def cloud_config_data
+      return "#cloud-config\n#{self.cloud_config.to_yaml}"
+    end
+
+    # Public: Generates a shell script to set environment variables for all
+    # CloudMaker config options, will get executed at machine boot.
+    #
+    # Returns a String containing the shell script
+    def boothook_data
       env_run_cmds = []
+
       self.options.each_pair do |key, properties|
         if properties["environment"] && !properties["value"].nil?
           env_run_cmds.push(set_environment_variable_cmd(key, properties["value"]))
         end
       end
 
-      user_data_config = self.cloud_config.dup
-      user_data_config['runcmd'] ||= []
-      user_data_config['runcmd'] = env_run_cmds.concat(user_data_config['runcmd'])
-      return "#cloud-config\n#{user_data_config.to_yaml}"
+      return "#cloud-boothook\n#!/bin/sh\n#{env_run_cmds.join("\n")}\n"
     end
+
 
     # Public: Generates a cloud-init includes list
     #
@@ -214,7 +224,7 @@ module CloudMaker
     #      'required' ...
     #   }, 'key2' => ... , ...}
     def extract_cloudmaker_config!(config)
-      cloud_maker_config = config.delete('cloud_maker') || {}
+      cloud_maker_config = config.delete('cloud-maker') || {}
       cloud_maker_config.keys.each do |key|
         #if key is set to anything but a hash then we treat it as the value property
         if !advanced_config?(cloud_maker_config[key])

@@ -1,5 +1,5 @@
 #cloud-maker
-cloud_maker:
+cloud-maker:
   ami: 'ami-82fa58eb'
   instance_type: 'm1.small'
   availability_zone: 'us-east-1b'
