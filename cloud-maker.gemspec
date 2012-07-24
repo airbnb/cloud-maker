@@ -8,4 +8,5 @@ Gem::Specification.new do |s|
   s.files       = Dir['lib/**/*.rb'] + Dir['bin/*']
   s.homepage    = 'https://github.com/airbnb/cloud-maker'
   s.executables = ["cloud-maker"]
+  s.add_runtime_dependency "colorize"
 end
