@@ -20,7 +20,7 @@ module CloudMaker
     end
 
     def execute
-      @result ||= `#{self.script}`
+      @result ||= `#{self.script}`.chomp
     end
 
     def to_s
