@@ -66,7 +66,6 @@ module CloudMaker
         instance = ec2.describe_instances([instance_id]).first # So we get the correct IP address
       end
 
-
       archiver = S3Archiver.new(
         :instance_id => instance_id,
         :aws_access_key_id => self.aws_access_key_id,

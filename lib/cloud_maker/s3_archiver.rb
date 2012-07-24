@@ -42,10 +42,15 @@ module CloudMaker
     # Public: Generates an archive with all information relevant to an instance
     # launch and stores it to S3.
     #
+    # cloud_maker_config - The CloudMaker::Config the instance was launched with
+    # instance           - A Hash describing the properties of the launched instance
+    #
     # Returns nothing.
-    def store_archive(cloud_maker_config)
-      archive = cloud_maker_config.to_archive
-      self.bucket.put(self.key, archive)
+    def store_archive(cloud_maker_config, instance)
+      userdata = cloud_maker_config.to_user_data
+      self.bucket.put(self.key + "/user_data.cloud_config", userdata)
+      self.bucket.put(self.key + "/instance.yaml", instance.to_yaml)
+      true
     end
 
     # Public: Retrieves a previously created archive from S3

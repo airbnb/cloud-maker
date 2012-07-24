@@ -98,13 +98,6 @@ module CloudMaker
       self.options.map {|key, properties| [key, properties["value"]]}
     end
 
-    # Public: Generate an archive of the cloudmaker configuration
-    #
-    # Returns an IO object containing the archive.
-    def to_archive
-      StringIO.new("my archive")
-    end
-
     # Public: Generates a multipart userdata string suitable for use with Cloud Init on EC2
     #
     # Returns a String containing the mime encoded userdata
