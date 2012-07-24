@@ -126,8 +126,7 @@ module CloudMaker
       env_run_cmds = []
       self.options.each_pair do |key, properties|
         if properties["environment"] && !properties["value"].nil?
-          escaped_value = properties["value"].to_s.gsub(/"/, '\\\\\\\\\"')
-          env_run_cmds.push "echo \"#{key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
+          env_run_cmds.push(set_environment_variable_cmd(key, properties["value"]))
         end
       end
 
@@ -262,6 +261,32 @@ module CloudMaker
       end
 
       includes
+    end
+
+    # Internal: Generates the shell command necessary to set an environment
+    # variable. It escapes the value but assumes there are no special characters
+    # in the key. If value is an array or a hash it generates an environment
+    # variable for each value in the array/hash with the key set to key_index.
+    #
+    # key   - The key of the environment variable
+    # value - The value to set the key to
+    #
+    # Returns a string that can be executed to globally set the environment variable.
+    def set_environment_variable_cmd(key, value)
+      if (value.kind_of?(Hash))
+        value.keys.map { |hash_key|
+          set_environment_variable_cmd("#{key}_#{hash_key}", value[hash_key])
+        }.join(';')
+      elsif (value.kind_of?(Array))
+        strings = []
+        value.each_with_index { |arr_val, i|
+          strings.push(set_environment_variable_cmd("#{key}_#{i}", arr_val))
+        }
+        strings.join(';')
+      else
+        escaped_value = value.to_s.gsub(/"/, '\\\\\\\\\"')
+        "echo \"#{key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
+      end
     end
   end
 end

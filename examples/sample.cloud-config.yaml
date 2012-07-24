@@ -8,6 +8,9 @@ cloud_maker:
   security_group: 'default'
   tags:
     group: 'zookeeper'
+  test_array:
+  - value1
+  - value2
   s3_archive_bucket: 'abb-conf'
   zk:
     required: true
