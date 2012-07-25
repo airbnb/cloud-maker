@@ -22,9 +22,9 @@ class CloudMakerCLI < Thor
     :default => {},
     :desc => "Set parameters in the CloudMaker config"
   def launch(instance_config_yaml)
-    puts "---------------------------"
+    puts "--------------------------------------------------------------------------------".green
     puts "Launching new EC2 instance"
-    puts "---------------------------\n"
+    puts "--------------------------------------------------------------------------------\n".green
 
     config = CloudMaker::Config.from_yaml(instance_config_yaml)
     options.set.each_pair {|key, val| config[key] = val}
@@ -78,12 +78,6 @@ class CloudMakerCLI < Thor
     else
       say "Launch aborted!".red
     end
-  end
-
-  desc "scratch", "Play with Thor"
-  def scratch(arg1)
-    say 'hello'
-    say 'hello in red'.red
   end
 end
 

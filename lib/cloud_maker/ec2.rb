@@ -48,15 +48,11 @@ module CloudMaker
 
       instance_id = instance[:aws_instance_id]
 
-      puts "Launched instance: #{instance_id.to_s.on_light_blue}"
-
       ec2.create_tags(instance_id, self.config["tags"]) if self.config["tags"]
 
       if (self.config["elastic_ip"])
         #we can't associate IPs while the state is pending
         while instance[:aws_state] == 'pending'
-          print '.'
-          STDOUT.flush
           #this is going to hammer EC2 a bit, it might be necessary to add some delay in here
           instance = ec2.describe_instances([instance_id]).first
         end
