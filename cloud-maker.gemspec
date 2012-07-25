@@ -9,4 +9,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/airbnb/cloud-maker'
   s.executables = ["cloud-maker"]
   s.add_runtime_dependency "colorize"
+  s.add_runtime_dependency "thor", "~> 0.15"
+  s.add_runtime_dependency "right_aws", '~> 3.0'
+
 end
