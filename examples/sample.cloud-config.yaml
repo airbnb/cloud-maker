@@ -13,7 +13,8 @@ cloud-maker:
   - value2
   s3_archive_bucket: 'abb-conf'
   zk:
-    required: true
+    required: false
+    default: !shell-script find_my_elastic_ip
     description: "The ID of the zookeeper instance - it should correspond to the DNS entry in the zookeeper config"
   launcher_hostname: !shell-script hostname
 
@@ -51,8 +52,10 @@ packages:
 - npm
 - ghc
 - cabal-install
-- runit
 - socklog
+
+output:
+  all: '| tee -a /var/log/cloud-init-output.log' # generate a detailed log of the cloud init build
 
 sethostname_to_instance_id:
 - &sethostname_to_instance_id |
@@ -73,3 +76,4 @@ runcmd:
 - [ update_rubygems ]
 - [ gem, install, bundler, unicorn, rake ]
 - [ npm, install, -g, fugue, coffee-script, mustache ]
+- apt-get install -y runit
