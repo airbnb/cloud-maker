@@ -2,7 +2,7 @@
 require 'thor'
 require 'colorize'
 require 'cloud-maker'
-# require 'pry'
+require 'pry'
 
 class CloudMakerCLI < Thor
   include Thor::Actions
@@ -21,6 +21,11 @@ class CloudMakerCLI < Thor
     :type => :hash,
     :default => {},
     :desc => "Set parameters in the CloudMaker config"
+  method_option :tags,
+    :alias => '-t',
+    :type => :hash,
+    :default => {},
+    :desc => "Set tags for EC2, merges with and overrides the tag property in the CloudMaker config"
   def launch(instance_config_yaml)
     puts "--------------------------------------------------------------------------------".green
     puts "Launching new EC2 instance"
@@ -28,6 +33,9 @@ class CloudMakerCLI < Thor
 
     config = CloudMaker::Config.from_yaml(instance_config_yaml)
     options.set.each_pair {|key, val| config[key] = val}
+
+    config['tags'] ||= {}
+    config['tags'].merge!(options.tags)
 
     if !config.valid?
       say "Before an instance can be launched we need a few more values to be specified.".yellow
