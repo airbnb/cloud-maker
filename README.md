@@ -9,6 +9,15 @@ CloudMaker makes deployment of instances in the cloud easy and allows them to be
 1. Include scripts are executed.
 1. Runcmds are executed.
 
+# Useful config properties
+
+* Store the output of all Cloud Init script execution in a log file:
+
+        output:
+          all: '| tee -a /var/log/cloud-init-output.log'
+
+  Building a machine can take awhile, to watch it happen SSH into the machine and ```tail -f /var/log/cloud-init-output.log```
+
 # Caveats
 
 * Installing runit via packages seems to break all further steps in the build process. As a work around include `apt-get install -y runit` in the `runcmd` section of your cloud init file.
