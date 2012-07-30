@@ -7,6 +7,23 @@ require 'pry'
 class CloudMakerCLI < Thor
   include Thor::Actions
 
+  desc "user_data [INSTANCE_CONFIG_YAML]", "Generate the Cloud Init user data for an instance described by INSTANCE_CONFIG_YAML"
+  method_option :set,
+    :alias => '-s',
+    :type => :hash,
+    :default => {},
+    :desc => "Set parameters in the CloudMaker config"
+  method_option :tags,
+    :alias => '-t',
+    :type => :hash,
+    :default => {},
+    :desc => "Set tags for EC2, merges with and overrides the tag property in the CloudMaker config"
+  def user_data(instance_config_yaml)
+    config = build_config(instance_config_yaml, options)
+    say "User Data:".green
+    puts config.to_user_data
+  end
+
   desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
   method_option :aws_access_key_id,
     :desc => "Your AWS access key id",
@@ -31,28 +48,7 @@ class CloudMakerCLI < Thor
     puts "Launching new EC2 instance"
     puts "--------------------------------------------------------------------------------\n".green
 
-    config = CloudMaker::Config.from_yaml(instance_config_yaml)
-    options.set.each_pair {|key, val| config[key] = val}
-
-    config['tags'] ||= {}
-    config['tags'].merge!(options.tags)
-
-    if !config.valid?
-      say "Before an instance can be launched we need a few more values to be specified.".yellow
-      say "Currently missing: #{config.missing_values.map{|key| key.cyan}.join(', ')}"
-      puts
-
-      config.missing_values.each do |key|
-        config[key] = ENV[key] if ENV[key]
-      end
-
-      config.missing_values.each do |key|
-        if (config.options[key]["description"])
-          say config.options[key]["description"]
-        end
-        config[key] = ask "Please choose a value for #{key.cyan}: "
-      end
-    end
+    config = build_config(instance_config_yaml, options)
 
     cloud_maker = CloudMaker::Ec2.new(config,
       :aws_access_key_id => options.aws_access_key_id,
@@ -87,6 +83,36 @@ class CloudMakerCLI < Thor
       say "Launch aborted!".red
     end
   end
+
+  private
+  def build_config(instance_config_yaml, options)
+    config = CloudMaker::Config.from_yaml(instance_config_yaml)
+    options.set.each_pair {|key, val| config[key] = val}
+
+    config['tags'] ||= {}
+    config['tags'].merge!(options.tags)
+
+    if !config.valid?
+      say "Before an instance can be launched we need a few more values to be specified.".yellow
+      say "Currently missing: #{config.missing_values.map{|key| key.cyan}.join(', ')}"
+      puts
+
+      config.missing_values.each do |key|
+        config[key] = ENV[key] if ENV[key]
+      end
+
+      config.missing_values.each do |key|
+        if (config.options[key]["description"])
+          say config.options[key]["description"]
+        end
+        config[key] = ask "Please choose a value for #{key.cyan}: "
+      end
+    end
+
+    config
+  end
 end
+
+
 
 CloudMakerCLI.start

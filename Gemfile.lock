@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cloud-maker (0.0.0)
+    cloud-maker (0.1.0.pre)
       colorize
       right_aws (~> 3.0)
       thor (~> 0.15)
