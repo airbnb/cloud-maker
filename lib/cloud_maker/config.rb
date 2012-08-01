@@ -298,5 +298,18 @@ module CloudMaker
         "echo \"#{key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
       end
     end
+
+    # Internal: Deep merges another CloudMaker::Config into this one giving
+    # precedence to all values set in this one.
+    #
+    # cloud_maker_config - The CloudMaker::Config to be imported
+    #
+    # Returns nothing.
+    def import(cloud_maker_config)
+      self.options = cloud_maker_config.options.dup.deep_merge!(self.options)
+      self.includes = cloud_maker_config.includes.dup.concat(self.includes).uniq!
+      self.cloud_config = cloud_maker_config.cloud_config.dup.deep_merge!(self.cloud_config)
+      self.extra_options = cloud_maker_config.extra_options.dup.deep_merge!(self.extra_options)
+    end
   end
 end

@@ -11,6 +11,7 @@ GEM
   specs:
     coderay (1.0.7)
     colorize (0.5.8)
+    deep_merge (1.0.0)
     method_source (0.7.1)
     pry (0.9.9.6)
       coderay (~> 1.0.5)
@@ -28,6 +29,7 @@ PLATFORMS
 DEPENDENCIES
   cloud-maker!
   colorize
+  deep_merge
   pry
   right_aws
   thor
