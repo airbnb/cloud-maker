@@ -1,6 +1,7 @@
 module CloudMaker
-    class ShellExecutor
-    YAML_DOMAIN = "!airbnb.com,2012-07-19"
+  class ShellExecutor
+    #If we don't use yaml.org,2002 some YAML implementations don't pickup our !shell-script nodes properly.
+    YAML_DOMAIN = "yaml.org,2002"
     YAML_TYPE = "shell-script"
 
     attr_accessor :script
