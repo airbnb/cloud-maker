@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.1.0'
+  s.version     = '0.1.2'
   s.date        = '2012-08-01'
   s.summary     = "Launch and perform initial configuration of cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
@@ -11,5 +11,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "colorize"
   s.add_runtime_dependency "thor", "~> 0.15"
   s.add_runtime_dependency "right_aws", '~> 3.0'
-
+  s.add_runtime_dependency "deep_merge", '~> 1.0'
 end

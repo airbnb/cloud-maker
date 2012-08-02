@@ -2,7 +2,6 @@
 require 'thor'
 require 'colorize'
 require 'cloud-maker'
-require 'pry'
 
 class CloudMakerCLI < Thor
   include Thor::Actions
