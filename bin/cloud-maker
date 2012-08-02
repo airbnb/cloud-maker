@@ -21,6 +21,16 @@ class CloudMakerCLI < Thor
     puts config.to_user_data
   end
 
+  desc "terminate [AWS_INSTANCE_ID]", "Terminate the specified AWS instance"
+  def terminate(aws_instance_id)
+    say "Not implemented.".red
+  end
+
+  desc "info [AWS_INSTANCE_ID]", "Display config info about the specified AWS instance"
+  def info(aws_instance_id)
+    say "Not implemented.".red
+  end
+
   desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
   method_option :aws_access_key_id,
     :desc => "Your AWS access key id",
@@ -47,11 +57,6 @@ class CloudMakerCLI < Thor
 
     config = build_config(instance_config_yaml, options)
 
-    cloud_maker = CloudMaker::Ec2.new(config,
-      :aws_access_key_id => options.aws_access_key_id,
-      :aws_secret_access_key => options.aws_secret_access_key
-    )
-
     if (!config.includes.empty?)
       puts
       say 'Include URLs:'.green
@@ -69,7 +74,12 @@ class CloudMakerCLI < Thor
     puts
 
     if yes?("Launch a new EC2 instance with the options above? (y/n)")
-      instance = cloud_maker.launch
+      cloud_maker = CloudMaker::Ec2.new(
+        :aws_access_key_id => options.aws_access_key_id,
+        :aws_secret_access_key => options.aws_secret_access_key
+      )
+
+      instance = cloud_maker.launch(config)
       puts
       say "Successfully launched new EC2 instance: ".green + instance[:aws_instance_id].magenta
       puts

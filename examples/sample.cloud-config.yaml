@@ -8,10 +8,10 @@ cloud-maker:
   security_group: 'default'
   tags:
     group: 'zookeeper'
+    s3_archive_bucket: 'abb-conf'
   test_array:
   - value1
   - value2
-  s3_archive_bucket: 'abb-conf'
   zk:
     required: false
     default: !shell-script find_my_elastic_ip

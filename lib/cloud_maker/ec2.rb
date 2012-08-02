@@ -6,8 +6,6 @@ module CloudMaker
     attr_accessor :aws_secret_access_key
     # Public: Gets/Sets the AWS secret.
     attr_accessor :aws_access_key_id
-    # Public: Gets/Sets the CloudMaker::Config
-    attr_accessor :config
 
     # Public: Creates a new Ec2 instance
     #
@@ -19,13 +17,12 @@ module CloudMaker
     #
     # Returns a new CloudMaker::Ec2 instance
     # Raises RuntimeError if any of the required options are not specified
-    def initialize(cloud_maker_config, options)
+    def initialize(options)
       required_keys = [:aws_access_key_id, :aws_secret_access_key]
       unless (required_keys - options.keys).empty?
         raise RuntimeError.new("Instantiated #{self.class} without required attributes: #{required_keys - options.keys}.")
       end
 
-      self.config = cloud_maker_config
       self.aws_access_key_id = options[:aws_access_key_id]
       self.aws_secret_access_key = options[:aws_secret_access_key]
     end
@@ -34,10 +31,10 @@ module CloudMaker
     # with it, adds any specified tags, and archives the launch details to S3.
     #
     # Returns a RightAws supplied Hash describing the launched instance.
-    def launch
+    def launch(cloud_make_config)
       ec2 = RightAws::Ec2.new(self.aws_access_key_id, self.aws_secret_access_key)
 
-      user_data = self.config.to_user_data
+      user_data = cloud_maker_config.to_user_data
 
       instance = ec2.launch_instances(config['ami'],
         :group_names => config['security_group'],
@@ -48,16 +45,16 @@ module CloudMaker
 
       instance_id = instance[:aws_instance_id]
 
-      ec2.create_tags(instance_id, self.config["tags"]) if self.config["tags"]
+      ec2.create_tags(instance_id, cloud_maker_config["tags"]) if cloud_maker_config["tags"]
 
-      if (self.config["elastic_ip"])
+      if (cloud_maker_config["elastic_ip"])
         #we can't associate IPs while the state is pending
         while instance[:aws_state] == 'pending'
           #this is going to hammer EC2 a bit, it might be necessary to add some delay in here
           instance = ec2.describe_instances([instance_id]).first
         end
 
-        ec2.associate_address(instance_id, :public_ip => self.config["elastic_ip"])
+        ec2.associate_address(instance_id, :public_ip => cloud_maker_config["elastic_ip"])
 
         instance = ec2.describe_instances([instance_id]).first # So we get the correct IP address
       end
@@ -66,9 +63,9 @@ module CloudMaker
         :instance_id => instance_id,
         :aws_access_key_id => self.aws_access_key_id,
         :aws_secret_access_key => self.aws_secret_access_key,
-        :bucket_name => self.config["s3_archive_bucket"]
+        :bucket_name => cloud_maker_config["tags"]["s3_archive_bucket"]
       )
-      archiver.store_archive(self.config, instance)
+      archiver.store_archive(cloud_maker_config, instance)
 
       instance
     end
