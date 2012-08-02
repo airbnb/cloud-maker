@@ -1,5 +1,5 @@
 require 'yaml'
-require 'stringio'
+require 'deep_merge'
 
 module CloudMaker
   class Config
@@ -24,6 +24,8 @@ module CloudMaker
     # Public: Gets/Sets extra information about the config to be stored for
     # archival purposes.
     attr_accessor :extra_options
+    # Internal: Gets/Sets an array of paths to other cloud maker configs to import.
+    attr_accessor :imports
 
     # Internal: A mime header for the Cloud Init config section of the user data
     CLOUD_CONFIG_HEADER = %Q|Content-Type: text/cloud-config; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nContent-Disposition: attachment; filename="cloud-config.yaml"\n\n|
@@ -76,7 +78,12 @@ module CloudMaker
       cloud_config = cloud_config.dup
       self.options = extract_cloudmaker_config!(cloud_config)
       self.includes = extract_includes!(cloud_config)
+      self.imports = extract_imports!(cloud_config)
       self.cloud_config = cloud_config
+
+      self.imports.reverse.each do |import_path|
+        self.import(self.class.from_yaml(import_path))
+      end
     end
 
     # Public: Check if the CloudMaker config is in a valid state.
@@ -206,9 +213,6 @@ module CloudMaker
     end
 
 
-
-    private
-
     # Internal: Takes a CloudMaker config and parses out the CloudMaker
     # specific portions of it. For each key/value it fills in any property
     # blanks from the DEFAULT_KEY_PROPERTIES. It also deletes the cloud_maker
@@ -273,6 +277,16 @@ module CloudMaker
       includes
     end
 
+    # Internal: Takes a CloudMaker config and parses out the imports list.
+    #
+    # config - A hash that should contain an 'import' key storing an array
+    # of paths to import.
+    #
+    # Returns an Array of URLs
+    def extract_imports!(config)
+      config.delete('import') || []
+    end
+
     # Internal: Generates the shell command necessary to set an environment
     # variable. It escapes the value but assumes there are no special characters
     # in the key. If value is an array or a hash it generates an environment
@@ -300,16 +314,20 @@ module CloudMaker
     end
 
     # Internal: Deep merges another CloudMaker::Config into this one giving
-    # precedence to all values set in this one.
+    # precedence to all values set in this one. Arrays will be merged as
+    # imported_array.concat(current_array).uniq.
+    #
+    # It should be noted that this is not reference safe, ie. objects within
+    # cloud_maker_config will end up referenced from this config object as well.
     #
     # cloud_maker_config - The CloudMaker::Config to be imported
     #
     # Returns nothing.
     def import(cloud_maker_config)
-      self.options = cloud_maker_config.options.dup.deep_merge!(self.options)
-      self.includes = cloud_maker_config.includes.dup.concat(self.includes).uniq!
-      self.cloud_config = cloud_maker_config.cloud_config.dup.deep_merge!(self.cloud_config)
-      self.extra_options = cloud_maker_config.extra_options.dup.deep_merge!(self.extra_options)
+      self.options = cloud_maker_config.options.deep_merge!(self.options)
+      self.includes = cloud_maker_config.includes.concat(self.includes).uniq
+      self.cloud_config = cloud_maker_config.cloud_config.deep_merge!(self.cloud_config)
+      self.extra_options = cloud_maker_config.extra_options.deep_merge!(self.extra_options)
     end
   end
 end
