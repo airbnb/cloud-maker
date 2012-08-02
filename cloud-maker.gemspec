@@ -1,8 +1,6 @@
-require 'bundler'
-
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.1.2'
+  s.version     = '0.2.0.pre'
   s.date        = '2012-08-01'
   s.summary     = "Launch and perform initial configuration of cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
@@ -10,5 +8,9 @@ Gem::Specification.new do |s|
   s.files       = Dir['lib/**/*.rb'] + Dir['bin/*']
   s.homepage    = 'https://github.com/airbnb/cloud-maker'
   s.executables = ["cloud-maker"]
-  s.add_bundler_dependencies
+  s.add_runtime_dependency "colorize"
+  s.add_runtime_dependency "thor", "~> 0.15"
+  s.add_runtime_dependency "right_aws", '~> 3.0'
+  s.add_runtime_dependency "deep_merge", '~> 1.0'
+  s.add_development_dependency "pry"
 end

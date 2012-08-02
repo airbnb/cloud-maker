@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-require 'thor'
-require 'colorize'
 require 'cloud-maker'
 
 class CloudMakerCLI < Thor

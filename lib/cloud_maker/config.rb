@@ -1,6 +1,3 @@
-require 'yaml'
-require 'deep_merge'
-
 module CloudMaker
   class Config
     # Public: Gets/Sets the CloudMaker specific properties. The options hash
