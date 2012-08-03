@@ -40,7 +40,9 @@ module CloudMaker
     DEFAULT_KEY_PROPERTIES = {
       "environment" => true,
       "required" => false,
-      "value" => nil
+      "value" => nil,
+      "default" => nil,
+      "description" => nil
     }
 
     # Public: Initializes a new CloudMaker object.
@@ -96,7 +98,7 @@ module CloudMaker
     #
     # Returns an Array of required keys that are missing values.
     def missing_values
-      self.options.select {|key, option| option["required"] && option["value"].nil?}.map(&:first).map(&:dup)
+      self.options.select {|key, option| (option["required"] || option["default"]) && option["value"].nil?}.map(&:first).map(&:dup)
     end
 
     # Returns a Hash of all of the CloudMaker specific properties in the configuration.

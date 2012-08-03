@@ -168,7 +168,7 @@ class CloudMakerCLI < Thor
     config['tags'] ||= {}
     config['tags'].merge!(options.tags)
 
-    if !config.valid?
+    if !config.missing_values.empty?
       say "Before an instance can be launched we need a few more values to be specified.".yellow
       say "Currently missing: #{config.missing_values.map{|key| key.cyan}.join(', ')}"
       puts
@@ -181,7 +181,16 @@ class CloudMakerCLI < Thor
         if (config.options[key]["description"])
           say config.options[key]["description"]
         end
-        config[key] = ask "Please choose a value for #{key.cyan}:"
+
+        if config.options[key]["default"]
+          config[key] = ask "Please choose a value for #{key.cyan} [#{config.options[key]["default"]}]:"
+        else
+          config[key] = ask "Please choose a value for #{key.cyan}:"
+        end
+
+        if (config[key].empty? && config.options[key]["default"])
+          config[key] = config.options[key]["default"]
+        end
       end
     end
 
