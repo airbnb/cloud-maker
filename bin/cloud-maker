@@ -124,8 +124,16 @@ class CloudMakerCLI < Thor
   private
   def print_colored_hash(hash, color=:cyan)
     print_table hash.map {|key, val|
-      [key.to_s.dup.send(color), val.to_s]
+      [key.to_s.dup.send(color), colorize_inspection_string(val.to_s)]
     }
+  end
+
+  def colorize_inspection_string(string)
+    string = string.dup
+    string.gsub!(/([\{\}\[\]])/, '\1'.magenta)
+    string.gsub!(/([\,])/, '\1'.yellow)
+    string.gsub!(/([\:\"\']?[0-9a-zA-Z_]*[\"\']?)=>/, '\1'.cyan + '=>')
+    string
   end
 
   def print_config_hash(hash)
