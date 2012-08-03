@@ -101,7 +101,13 @@ module CloudMaker
 
     # Returns a Hash of all of the CloudMaker specific properties in the configuration.
     def to_hash
-      self.options.map {|key, properties| [key, properties["value"]]}
+      {
+        'cloud-maker' => self.options.map {|key, properties| [key, properties["value"]]},
+        'cloud-init' => self.cloud_config,
+        'include' => self.includes,
+        'import' => self.imports,
+        'extra-options' => self.extra_options
+      }
     end
 
     # Public: Generates a multipart userdata string suitable for use with Cloud Init on EC2
@@ -205,7 +211,7 @@ module CloudMaker
           raise "ERROR: The path to the CloudMaker config is incorrect"
         end
 
-        CloudMaker::Config.new(YAML::load(cloud_yaml), :config_path => full_path)
+        CloudMaker::Config.new(YAML::load(cloud_yaml), 'config_path' => full_path)
       end
     end
 

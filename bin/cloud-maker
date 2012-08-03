@@ -41,7 +41,12 @@ class CloudMakerCLI < Thor
       :aws_secret_access_key => options.aws_secret_access_key
     )
 
-    print_colored_hash(cloud_maker.info(aws_instance_id))
+    info = cloud_maker.info(aws_instance_id)
+
+    print_config_hash(info[:cloud_config])
+    puts
+    say "Original instance state:".green
+    print_colored_hash(info[:instance])
   end
 
   desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
@@ -70,21 +75,7 @@ class CloudMakerCLI < Thor
 
     config = build_config(instance_config_yaml, options)
 
-    if (!config.includes.empty?)
-      puts
-      say 'Include URLs:'.green
-      config.includes.each do |url|
-        puts url
-      end
-    end
-
-    puts
-    say "CloudMaker configuration:".green
-    print_colored_hash config.to_hash
-
-    puts
-    say "Configuration file:".green + " " + config.extra_options[:config_path]
-    puts
+    print_config_hash(config.to_hash)
 
     if yes?("Launch a new EC2 instance with the options above? (y/n)")
       cloud_maker = CloudMaker::Ec2.new(
@@ -107,6 +98,32 @@ class CloudMakerCLI < Thor
     print_table hash.map {|key, val|
       [key.to_s.dup.send(color), val.to_s]
     }
+  end
+
+  def print_config_hash(hash)
+    puts
+    say "CloudInit configuration:".green
+    print_colored_hash hash['cloud-init']
+    puts
+
+    if (!hash['include'].empty?)
+      puts
+      say 'Include URLs:'.green
+      hash['include'].each do |url|
+        puts url
+      end
+    end
+
+    puts
+    say "CloudMaker configuration:".green
+    print_colored_hash hash['cloud-maker']
+    puts
+
+    say "Configuration files:".green
+    [hash['extra-options']['config_path'], *hash['import']].each do |file|
+      puts file
+    end
+    puts
   end
 
   def build_config(instance_config_yaml, options)

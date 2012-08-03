@@ -55,7 +55,7 @@ module CloudMaker
       userdata = cloud_maker_config.to_user_data
       self.bucket.put(self.user_data_key, userdata)
       self.bucket.put(self.instance_yaml_key, instance.to_yaml)
-      self.bucket.put(self.cloud_config_yaml_key, cloud_maker_config.to_yaml)
+      self.bucket.put(self.cloud_config_yaml_key, cloud_maker_config.to_hash.to_yaml)
       true
     end
 
