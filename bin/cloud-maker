@@ -27,8 +27,21 @@ class CloudMakerCLI < Thor
   end
 
   desc "info [AWS_INSTANCE_ID]", "Display config info about the specified AWS instance"
+  method_option :aws_access_key_id,
+    :desc => "Your AWS access key id",
+    :default => ENV['AWS_ACCESS_KEY_ID'],
+    :required => true
+  method_option :aws_secret_access_key,
+    :desc => "Your AWS secret access key",
+    :default => ENV['AWS_SECRET_ACCESS_KEY'],
+    :required => true
   def info(aws_instance_id)
-    say "Not implemented.".red
+    cloud_maker = CloudMaker::Ec2.new(
+      :aws_access_key_id => options.aws_access_key_id,
+      :aws_secret_access_key => options.aws_secret_access_key
+    )
+
+    print_colored_hash(cloud_maker.info(aws_instance_id))
   end
 
   desc "launch [INSTANCE_CONFIG_YAML]", "Launch a new EC2 instance as described by INSTANCE_CONFIG_YAML"
@@ -67,7 +80,7 @@ class CloudMakerCLI < Thor
 
     puts
     say "CloudMaker configuration:".green
-    print_table config.to_hash.map {|key, val| [key.dup.cyan, val]}
+    print_colored_hash config.to_hash
 
     puts
     say "Configuration file:".green + " " + config.extra_options[:config_path]
@@ -83,15 +96,19 @@ class CloudMakerCLI < Thor
       puts
       say "Successfully launched new EC2 instance: ".green + instance[:aws_instance_id].magenta
       puts
-      print_table instance.map {|key, val|
-        [key.to_s.cyan, val.to_s]
-      }
+      print_colored_hash(instance)
     else
       say "Launch aborted!".red
     end
   end
 
   private
+  def print_colored_hash(hash, color=:cyan)
+    print_table hash.map {|key, val|
+      [key.to_s.dup.send(color), val.to_s]
+    }
+  end
+
   def build_config(instance_config_yaml, options)
     config = CloudMaker::Config.from_yaml(instance_config_yaml)
     options.set.each_pair {|key, val| config[key] = val}
@@ -119,7 +136,5 @@ class CloudMakerCLI < Thor
     config
   end
 end
-
-
 
 CloudMakerCLI.start

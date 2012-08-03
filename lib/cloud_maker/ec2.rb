@@ -6,6 +6,11 @@ module CloudMaker
     attr_accessor :aws_secret_access_key
     # Public: Gets/Sets the AWS secret.
     attr_accessor :aws_access_key_id
+    # Internal: Gets/Sets the RightAws::Ec2 instance.
+    attr_accessor :ec2
+
+    # Public: The name of the tag that will be used to find the name of an s3 bucket for archiving/information retrieval
+    BUCKET_TAG = 's3_archive_bucket'
 
     # Public: Creates a new Ec2 instance
     #
@@ -25,21 +30,33 @@ module CloudMaker
 
       self.aws_access_key_id = options[:aws_access_key_id]
       self.aws_secret_access_key = options[:aws_secret_access_key]
+
+      self.ec2 = RightAws::Ec2.new(self.aws_access_key_id, self.aws_secret_access_key)
+
+    end
+
+    def info(instance_id)
+      bucket = self.ec2.describe_tags(:filters => {'resource-id' => instance_id, 'key' => BUCKET_TAG}).first[:value]
+      archiver = S3Archiver.new(
+        :instance_id => instance_id,
+        :aws_access_key_id => self.aws_access_key_id,
+        :aws_secret_access_key => self.aws_secret_access_key,
+        :bucket_name => bucket
+      )
+      archiver.load_archive
     end
 
     # Public: Launches a new EC2 instance, associates any specified elastic IPS
     # with it, adds any specified tags, and archives the launch details to S3.
     #
     # Returns a RightAws supplied Hash describing the launched instance.
-    def launch(cloud_make_config)
-      ec2 = RightAws::Ec2.new(self.aws_access_key_id, self.aws_secret_access_key)
-
+    def launch(cloud_maker_config)
       user_data = cloud_maker_config.to_user_data
 
-      instance = ec2.launch_instances(config['ami'],
-        :group_names => config['security_group'],
-        :instance_type => config['instance_type'],
-        :key_name => config['key_pair'],
+      instance = ec2.launch_instances(cloud_maker_config['ami'],
+        :group_names => cloud_maker_config['security_group'],
+        :instance_type => cloud_maker_config['instance_type'],
+        :key_name => cloud_maker_config['key_pair'],
         :user_data => user_data
       ).first
 
@@ -63,7 +80,7 @@ module CloudMaker
         :instance_id => instance_id,
         :aws_access_key_id => self.aws_access_key_id,
         :aws_secret_access_key => self.aws_secret_access_key,
-        :bucket_name => cloud_maker_config["tags"]["s3_archive_bucket"]
+        :bucket_name => cloud_maker_config["tags"][BUCKET_TAG]
       )
       archiver.store_archive(cloud_maker_config, instance)
 

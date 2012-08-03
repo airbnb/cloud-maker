@@ -1,3 +1,4 @@
+require 'pry'
 require 'right_aws'
 
 module CloudMaker
@@ -14,6 +15,10 @@ module CloudMaker
 
     # Public: All archive keys will be prefixed with KEY_PREFIX/
     KEY_PREFIX = "cloud-maker"
+
+    INSTANCE_YAML = 'instance.yaml'
+    CLOUD_CONFIG_YAML = 'cloud_config.yaml'
+
 
     # Public: Creates a new S3 Archiver instance
     #
@@ -48,8 +53,9 @@ module CloudMaker
     # Returns nothing.
     def store_archive(cloud_maker_config, instance)
       userdata = cloud_maker_config.to_user_data
-      self.bucket.put(self.key + "/user_data.cloud_config", userdata)
-      self.bucket.put(self.key + "/instance.yaml", instance.to_yaml)
+      self.bucket.put(self.user_data_key, userdata)
+      self.bucket.put(self.instance_yaml_key, instance.to_yaml)
+      self.bucket.put(self.cloud_config_yaml_key, cloud_maker_config.to_yaml)
       true
     end
 
@@ -57,13 +63,33 @@ module CloudMaker
     #
     # Returns the content of the archive.
     def load_archive
-      self.bucket.get(self.key)
+      {
+        :user_data => self.bucket.get(self.user_data_key),
+        :cloud_config => YAML::load(self.bucket.get(self.cloud_config_yaml_key)),
+        :instance => YAML::load(self.bucket.get(self.instance_yaml_key))
+      }
     end
 
+    # Internal: Returns the key for the user_data file
+    def user_data_key
+      self.prefix_key('user_data')
+    end
+
+    # Internal: Returns the key for the instance yaml file
+    def instance_yaml_key
+      self.prefix_key('instance.yaml')
+    end
+
+    # Internal: Returns the key for the cloud config yaml file
+    def cloud_config_yaml_key
+      self.prefix_key('cloud_config.yaml')
+    end
+
+
     # Public: Returns the key that the archive will be stored under
-    def key
+    def prefix_key(key)
       if self.instance_id
-        [KEY_PREFIX, self.instance_id].join('/')
+        [KEY_PREFIX, self.instance_id, key].join('/')
       else
         raise RuntimeError.new("Attempted to generate a key name without an instance id.")
       end
