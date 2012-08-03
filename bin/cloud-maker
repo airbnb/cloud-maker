@@ -42,7 +42,7 @@ class CloudMakerCLI < Thor
 
     puts
 
-    if yes?("Are you sure you wish to terminate this instance? (y/n)".red)
+    if yes?("Are you sure you wish to terminate this instance?".red + " (y/n)")
       cloud_maker = CloudMaker::Ec2.new(
         :aws_access_key_id => options.aws_access_key_id,
         :aws_secret_access_key => options.aws_secret_access_key
