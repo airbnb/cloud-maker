@@ -1,5 +1,6 @@
 Bundler.require(ENV['CLOUDMAKER_ENV'].to_sym) if ENV['CLOUDMAKER_ENV']
 
+require 'yaml'
 require 'thor'
 require 'colorize'
 require 'deep_merge'

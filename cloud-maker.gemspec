@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.2.0.pre'
-  s.date        = '2012-08-01'
+  s.version     = '0.2.0.pre2'
+  s.date        = '2012-08-03'
   s.summary     = "Launch and perform initial configuration of cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
   s.email       = 'nathan.baxter@airbnb.cloud-maker'

@@ -4,6 +4,8 @@ require 'cloud-maker'
 class CloudMakerCLI < Thor
   include Thor::Actions
 
+  map "--version" => :version, "-v" => :version
+
   desc "user_data [INSTANCE_CONFIG_YAML]", "Generate the Cloud Init user data for an instance described by INSTANCE_CONFIG_YAML"
   method_option :set,
     :alias => '-s',
@@ -21,9 +23,35 @@ class CloudMakerCLI < Thor
     puts config.to_user_data
   end
 
+  desc "version", "Report the current version of CloudMaker"
+  def version
+    say "cloud-maker #{Gem::Specification.find_by_name('cloud-maker').version.version}"
+  end
+
   desc "terminate [AWS_INSTANCE_ID]", "Terminate the specified AWS instance"
+  method_option :aws_access_key_id,
+    :desc => "Your AWS access key id",
+    :default => ENV['AWS_ACCESS_KEY_ID'],
+    :required => true
+  method_option :aws_secret_access_key,
+    :desc => "Your AWS secret access key",
+    :default => ENV['AWS_SECRET_ACCESS_KEY'],
+    :required => true
   def terminate(aws_instance_id)
-    say "Not implemented.".red
+    info(aws_instance_id)
+
+    puts
+
+    if yes?("Are you sure you wish to terminate this instance? (y/n)".red)
+      cloud_maker = CloudMaker::Ec2.new(
+        :aws_access_key_id => options.aws_access_key_id,
+        :aws_secret_access_key => options.aws_secret_access_key
+      )
+      cloud_maker.terminate(aws_instance_id)
+      say "The instance was terminated."
+    else
+      say "Termination aborted."
+    end
   end
 
   desc "info [AWS_INSTANCE_ID]", "Display config info about the specified AWS instance"
@@ -107,14 +135,12 @@ class CloudMakerCLI < Thor
     puts
 
     if (!hash['include'].empty?)
-      puts
       say 'Include URLs:'.green
       hash['include'].each do |url|
         puts url
       end
     end
 
-    puts
     say "CloudMaker configuration:".green
     print_colored_hash hash['cloud-maker']
     puts
@@ -146,7 +172,7 @@ class CloudMakerCLI < Thor
         if (config.options[key]["description"])
           say config.options[key]["description"]
         end
-        config[key] = ask "Please choose a value for #{key.cyan}: "
+        config[key] = ask "Please choose a value for #{key.cyan}:"
       end
     end
 

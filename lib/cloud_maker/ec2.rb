@@ -32,9 +32,11 @@ module CloudMaker
       self.aws_secret_access_key = options[:aws_secret_access_key]
 
       self.ec2 = RightAws::Ec2.new(self.aws_access_key_id, self.aws_secret_access_key)
-
     end
 
+    # Public: Fetch archived information about an instance
+    #
+    # Returns a hash of information about the instance as it was launched
     def info(instance_id)
       bucket = self.ec2.describe_tags(:filters => {'resource-id' => instance_id, 'key' => BUCKET_TAG}).first[:value]
       archiver = S3Archiver.new(
@@ -44,6 +46,13 @@ module CloudMaker
         :bucket_name => bucket
       )
       archiver.load_archive
+    end
+
+    # Public: Terminates the specified EC2 instance.
+    #
+    # Returns a RightAws supplied Hash describing the terminated instance.
+    def terminate(instance_id)
+      self.ec2.terminate_instances([instance_id])
     end
 
     # Public: Launches a new EC2 instance, associates any specified elastic IPS
