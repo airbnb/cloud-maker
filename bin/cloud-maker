@@ -139,6 +139,7 @@ class CloudMakerCLI < Thor
       hash['include'].each do |url|
         puts url
       end
+      puts
     end
 
     say "CloudMaker configuration:".green
