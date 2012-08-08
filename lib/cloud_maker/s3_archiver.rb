@@ -1,6 +1,3 @@
-require 'pry'
-require 'right_aws'
-
 module CloudMaker
   class S3Archiver
 

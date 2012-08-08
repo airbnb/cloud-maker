@@ -1,5 +1,3 @@
-Bundler.require(ENV['CLOUDMAKER_ENV'].to_sym) if ENV['CLOUDMAKER_ENV']
-
 require 'yaml'
 require 'thor'
 require 'colorize'
@@ -10,4 +8,3 @@ require 'cloud_maker/config'
 require 'cloud_maker/ec2'
 require 'cloud_maker/s3_archiver'
 require 'cloud_maker/shell_executor'
-
