@@ -162,7 +162,7 @@ class CloudMakerCLI < Thor
   end
 
   def build_config(instance_config_yaml, options)
-    config = CloudMaker::Config.from_yaml(instance_config_yaml)
+    config = CloudMaker::Config.from_yaml(instance_config_yaml, 'import_ec2' => true)
     options.set.each_pair {|key, val| config[key] = val}
 
     config['tags'] ||= {}

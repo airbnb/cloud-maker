@@ -61,25 +61,30 @@ module CloudMaker
     #                   be used. If the detailed version is used all properties
     #                   are optional and DEFAULT_KEY_PROPERTIES will be used to
     #                   fill in the blanks.
-    #
     #   'include'     - An array of URLs or a String containing 1 URL per line
     #                   with optional # prefixed lines as comments.
     #   ...           - All valid properties of a Cloud Init config
     #                   are also valid here. See:
     #                   https://help.ubuntu.com/community/CloudInit
-    # extra_options - Extra information about the instantiation. These will not
-    #                 be used to launch the instance but will be stored in the
-    #                 archive describing the instance.
+    #
+    # extra_options   - Options that describe the config as opposed to being part
+    #                   of the config.
+    #   'config_path' - The path the config was loaded from. Used for archival purposes.
+    #   'import_ec2'  - CloudMaker::Ec2 defines properties it relies on, if this value
+    #                   is true then we pull those property definitions in.
     #
     # Returns a CloudMaker object
-    def initialize(cloud_config, extra_options)
+    def initialize(cloud_config, extra_options={})
       self.extra_options = extra_options
+      require "pry";binding.pry
       cloud_config = cloud_config.dup
+
       self.options = extract_cloudmaker_config!(cloud_config)
       self.includes = extract_includes!(cloud_config)
       self.imports = extract_imports!(cloud_config)
       self.cloud_config = cloud_config
 
+      self.import(self.class.new(Ec2::CLOUD_MAKER_CONFIG)) if (extra_options['import_ec2'])
       self.imports.reverse.each do |import_path|
         self.import(self.class.from_yaml(import_path))
       end
@@ -201,11 +206,12 @@ module CloudMaker
       # from it.
       #
       # instance_config_yaml - The path of the YAML file
+      # options - Any options to pass through as options to CloudMaker::Config::initialize
       #
       # Returns a new Config
       # Raises: Exception if the file doesn't exist.
       # Raises: SyntaxError if the YAML file is invalid.
-      def from_yaml(instance_config_yaml)
+      def from_yaml(instance_config_yaml, options={})
         begin
           full_path = File.expand_path(instance_config_yaml)
           cloud_yaml = File.open(full_path, "r") #Right_AWS will base64 encode this for us
@@ -213,7 +219,11 @@ module CloudMaker
           raise "ERROR: The path to the CloudMaker config is incorrect"
         end
 
-        CloudMaker::Config.new(YAML::load(cloud_yaml), 'config_path' => full_path)
+        # loading a blank config file returns false, it's an odd degenerate case but handling
+        # it like this makes sanity checking other missing values easy.
+        config = YAML::load(cloud_yaml) || {}
+
+        CloudMaker::Config.new(config, options.merge('config_path' => full_path))
       end
     end
 

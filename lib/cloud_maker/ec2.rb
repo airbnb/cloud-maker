@@ -9,6 +9,36 @@ module CloudMaker
     # Internal: Gets/Sets the RightAws::Ec2 instance.
     attr_accessor :ec2
 
+    # Public: A CloudMaker::Config hash that describes the config properties Ec2 relies on.
+    CLOUD_MAKER_CONFIG = {
+      'cloud-maker' => {
+        'ami' => {
+          'required' => true,
+          'description' => "The Amazon AMI ID for the instance."
+        },
+        'instance_type' => {
+          'required' => true,
+          'description' => "The Amazon instance type, eg. m1.small."
+        },
+        'availability_zone' => {
+          'required' => true,
+          'description' => "The Amazon availability zone, eg. us-east-1a"
+        },
+        'key_pair' => {
+          'default' => "",
+          'description' => "The name of an Amazon key pair, so you can actually login to the instance."
+        },
+        'elastic_ip' => {
+          'description' => "An elastic IP address you control that you would like to associate to the instance."
+        },
+        'security_group' => {
+          'default' => 'default',
+          'required' => true,
+          'description' => 'The Amazon EC2 security group to launch the instance with.'
+        }
+      }
+    }
+
     # Public: The name of the tag that will be used to find the name of an s3 bucket for archiving/information retrieval
     BUCKET_TAG = 's3_archive_bucket'
 
