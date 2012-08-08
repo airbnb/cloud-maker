@@ -81,9 +81,9 @@ module CloudMaker
         end
 
         ec2.associate_address(instance_id, :public_ip => cloud_maker_config["elastic_ip"])
-
-        instance = ec2.describe_instances([instance_id]).first # So we get the correct IP address
       end
+
+      instance = ec2.describe_instances([instance_id]).first # So we get updated tag/ip info
 
       archiver = S3Archiver.new(
         :instance_id => instance_id,
