@@ -113,7 +113,17 @@ module CloudMaker
         ec2.associate_address(instance_id, :public_ip => cloud_maker_config["elastic_ip"])
       end
 
-      instance = ec2.describe_instances([instance_id]).first # So we get updated tag/ip info
+      begin
+        instance = ec2.describe_instances([instance_id]).first # So we get updated tag/ip info
+      rescue RightAws::AwsError => e
+        tries ||= 0
+        tries += 1
+        if tries <= 5
+          sleep 2**tries
+        else
+          raise e
+        end
+      end
 
       archiver = S3Archiver.new(
         :instance_id => instance_id,
