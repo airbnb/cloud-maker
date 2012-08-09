@@ -76,7 +76,6 @@ module CloudMaker
     # Returns a CloudMaker object
     def initialize(cloud_config, extra_options={})
       self.extra_options = extra_options
-      require "pry";binding.pry
       cloud_config = cloud_config.dup
 
       self.options = extract_cloudmaker_config!(cloud_config)
