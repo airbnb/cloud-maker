@@ -96,6 +96,11 @@ class CloudMakerCLI < Thor
     :type => :hash,
     :default => {},
     :desc => "Set tags for EC2, merges with and overrides the tag property in the CloudMaker config"
+  method_option :yes,
+    :alias => '-y',
+    :type => :boolean,
+    :default => false,
+    :desc => "Answer yes to any confirmation prompts automatically."
   def launch(instance_config_yaml)
     puts "--------------------------------------------------------------------------------".green
     puts "Launching new EC2 instance"
@@ -105,7 +110,7 @@ class CloudMakerCLI < Thor
 
     print_config_hash(config.to_hash)
 
-    if yes?("Launch a new EC2 instance with the options above? (y/n)")
+    if options.yes || yes?("Launch a new EC2 instance with the options above? (y/n)")
       cloud_maker = CloudMaker::Ec2.new(
         :aws_access_key_id => options.aws_access_key_id,
         :aws_secret_access_key => options.aws_secret_access_key
