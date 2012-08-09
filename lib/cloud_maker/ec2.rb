@@ -96,6 +96,7 @@ module CloudMaker
         :group_names => cloud_maker_config['security_group'],
         :instance_type => cloud_maker_config['instance_type'],
         :key_name => cloud_maker_config['key_pair'],
+        :availability_zone => cloud_maker_config['availability_zone'],
         :user_data => user_data
       ).first
 
