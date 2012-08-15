@@ -2,7 +2,7 @@ require 'yaml'
 require 'thor'
 require 'colorize'
 require 'deep_merge'
-require 'right_aws'
+require 'aws-sdk'
 
 require 'cloud_maker/config'
 require 'cloud_maker/ec2'
