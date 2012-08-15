@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.3.0.pre'
+  s.version     = '0.3.0'
   s.date        = '2012-08-15'
   s.summary     = "Launch and perform initial configuration of cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
