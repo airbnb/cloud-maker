@@ -7,7 +7,7 @@ module CloudMaker
     attr_accessor :aws_access_key_id
     # Public: Gets/Sets the EC2 instance ID string.
     attr_accessor :instance_id
-    # Internal: Gets/Sets the RightAws::S3::Bucket used for storing/loading archives.
+    # Internal: Gets/Sets the bucket object used for storing/loading archives.
     attr_accessor :bucket
 
     # Public: All archive keys will be prefixed with KEY_PREFIX/
@@ -37,22 +37,26 @@ module CloudMaker
       self.aws_access_key_id = options[:aws_access_key_id]
       self.aws_secret_access_key = options[:aws_secret_access_key]
 
-      s3 = RightAws::S3.new(self.aws_access_key_id, self.aws_secret_access_key)
-      self.bucket = s3.bucket(options[:bucket_name])
+      self.bucket = AWS::S3.new(
+        :access_key_id => self.aws_access_key_id,
+        :secret_access_key => self.aws_secret_access_key
+      ).buckets[options[:bucket_name]]
+
+      raise RuntimeError.new("The S3 bucket #{options[:bucket_name]} does not exist.") unless self.bucket.exists?
     end
 
     # Public: Generates an archive with all information relevant to an instance
     # launch and stores it to S3.
     #
     # cloud_maker_config - The CloudMaker::Config the instance was launched with
-    # instance           - A Hash describing the properties of the launched instance
+    # properties         - A Hash describing the properties of the launched instance
     #
     # Returns nothing.
-    def store_archive(cloud_maker_config, instance)
+    def store_archive(cloud_maker_config, properties)
       userdata = cloud_maker_config.to_user_data
-      self.bucket.put(self.user_data_key, userdata)
-      self.bucket.put(self.instance_yaml_key, instance.to_yaml)
-      self.bucket.put(self.cloud_config_yaml_key, cloud_maker_config.to_hash.to_yaml)
+      self.bucket.objects.create(self.user_data_key, :data => userdata)
+      self.bucket.objects.create(self.instance_yaml_key, :data => properties.to_yaml)
+      self.bucket.objects.create(self.cloud_config_yaml_key, :data => cloud_maker_config.to_hash.to_yaml)
       true
     end
 
@@ -61,9 +65,9 @@ module CloudMaker
     # Returns the content of the archive.
     def load_archive
       {
-        :user_data => self.bucket.get(self.user_data_key),
-        :cloud_config => YAML::load(self.bucket.get(self.cloud_config_yaml_key)),
-        :instance => YAML::load(self.bucket.get(self.instance_yaml_key))
+        :user_data => self.bucket.objects[self.user_data_key].read,
+        :cloud_config => YAML::load(self.bucket.objects[self.cloud_config_yaml_key].read),
+        :instance => YAML::load(self.bucket.objects[self.instance_yaml_key].read)
       }
     end
 

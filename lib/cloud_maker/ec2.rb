@@ -1,15 +1,15 @@
 require 'right_aws'
 
 module CloudMaker
-  class Ec2
+  class EC2
     # Public: Gets/Sets the AWS access key.
     attr_accessor :aws_secret_access_key
     # Public: Gets/Sets the AWS secret.
     attr_accessor :aws_access_key_id
-    # Internal: Gets/Sets the RightAws::Ec2 instance.
+    # Internal: Gets/Sets the AWS::EC2 instance.
     attr_accessor :ec2
 
-    # Public: A CloudMaker::Config hash that describes the config properties Ec2 relies on.
+    # Public: A CloudMaker::Config hash that describes the config properties EC2 relies on.
     CLOUD_MAKER_CONFIG = {
       'cloud-maker' => {
         'ami' => {
@@ -42,7 +42,7 @@ module CloudMaker
     # Public: The name of the tag that will be used to find the name of an s3 bucket for archiving/information retrieval
     BUCKET_TAG = 's3_archive_bucket'
 
-    # Public: Creates a new Ec2 instance
+    # Public: Creates a new EC2 instance
     #
     # cloud_maker_config - A CloudMaker::Config object describing the instance
     #                      to be managed.
@@ -50,7 +50,7 @@ module CloudMaker
     #                      :aws_access_key_id     - (required) The AWS access key
     #                      :aws_secret_access_key - (required) The AWS secret
     #
-    # Returns a new CloudMaker::Ec2 instance
+    # Returns a new CloudMaker::EC2 instance
     # Raises RuntimeError if any of the required options are not specified
     def initialize(options)
       required_keys = [:aws_access_key_id, :aws_secret_access_key]
@@ -61,80 +61,81 @@ module CloudMaker
       self.aws_access_key_id = options[:aws_access_key_id]
       self.aws_secret_access_key = options[:aws_secret_access_key]
 
-      self.ec2 = RightAws::Ec2.new(self.aws_access_key_id, self.aws_secret_access_key)
+      self.ec2 = AWS::EC2.new(:access_key_id => self.aws_access_key_id, :secret_access_key => self.aws_secret_access_key)
     end
 
     # Public: Fetch archived information about an instance
     #
     # Returns a hash of information about the instance as it was launched
     def info(instance_id)
-      bucket = self.ec2.describe_tags(:filters => {'resource-id' => instance_id, 'key' => BUCKET_TAG}).first[:value]
+      bucket = ec2.instances[instance_id].tags[BUCKET_TAG]
+
       archiver = S3Archiver.new(
         :instance_id => instance_id,
         :aws_access_key_id => self.aws_access_key_id,
         :aws_secret_access_key => self.aws_secret_access_key,
         :bucket_name => bucket
       )
+
       archiver.load_archive
     end
 
     # Public: Terminates the specified EC2 instance.
     #
-    # Returns a RightAws supplied Hash describing the terminated instance.
+    # Returns nothing.
     def terminate(instance_id)
-      self.ec2.terminate_instances([instance_id])
+      ec2.instances[instance_id].terminate
     end
 
     # Public: Launches a new EC2 instance, associates any specified elastic IPS
     # with it, adds any specified tags, and archives the launch details to S3.
     #
-    # Returns a RightAws supplied Hash describing the launched instance.
+    # Returns an AWS::EC2 object for the launched instance.
     def launch(cloud_maker_config)
       user_data = cloud_maker_config.to_user_data
 
-      instance = ec2.launch_instances(cloud_maker_config['ami'],
-        :group_names => cloud_maker_config['security_group'],
+      instance = ec2.instances.create(
+        :image_id => cloud_maker_config['ami'],
+        :security_groups => cloud_maker_config['security_group'],
         :instance_type => cloud_maker_config['instance_type'],
         :key_name => cloud_maker_config['key_pair'],
         :availability_zone => cloud_maker_config['availability_zone'],
         :user_data => user_data
-      ).first
+      )
 
-      instance_id = instance[:aws_instance_id]
-
-      ec2.create_tags(instance_id, cloud_maker_config["tags"]) if cloud_maker_config["tags"]
-
-      if (cloud_maker_config["elastic_ip"])
-        #we can't associate IPs while the state is pending
-        while instance[:aws_state] == 'pending'
-          #this is going to hammer EC2 a bit, it might be necessary to add some delay in here
-          instance = ec2.describe_instances([instance_id]).first
-        end
-
-        ec2.associate_address(instance_id, :public_ip => cloud_maker_config["elastic_ip"])
-      end
-
-      begin
-        instance = ec2.describe_instances([instance_id]).first # So we get updated tag/ip info
-      rescue RightAws::AwsError => e
-        tries ||= 0
-        tries += 1
-        if tries <= 5
-          sleep 2**tries
-        else
-          raise e
-        end
-      end
+      instance.tags.set(cloud_maker_config["tags"]) if cloud_maker_config["tags"]
+      instance.associate_elastic_ip(cloud_maker_config["elastic_ip"]) if cloud_maker_config["elastic_ip"]
 
       archiver = S3Archiver.new(
-        :instance_id => instance_id,
+        :instance_id => instance.id,
         :aws_access_key_id => self.aws_access_key_id,
         :aws_secret_access_key => self.aws_secret_access_key,
         :bucket_name => cloud_maker_config["tags"][BUCKET_TAG]
       )
-      archiver.store_archive(cloud_maker_config, instance)
+      archiver.store_archive(cloud_maker_config, self.class.instance_to_hash(instance))
 
       instance
     end
+
+
+    class << self
+      # Public: Generates a hash of properties from an AWS::EC2 instance
+      #
+      # Returns a hash of properties for the instance.
+      def instance_to_hash(instance)
+        {
+          :instance_id => instance.id,
+          :ami => instance.image_id,
+          :api_termination_disabled => instance.api_termination_disabled?,
+          :dns_name => instance.dns_name,
+          :ip_address => instance.ip_address,
+          :private_ip_address => instance.private_ip_address,
+          :key_name => instance.key_name,
+          :owner_id => instance.owner_id,
+          :status => instance.status
+        }
+      end
+    end
+
   end
 end

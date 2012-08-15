@@ -70,7 +70,7 @@ module CloudMaker
     # extra_options   - Options that describe the config as opposed to being part
     #                   of the config.
     #   'config_path' - The path the config was loaded from. Used for archival purposes.
-    #   'import_ec2'  - CloudMaker::Ec2 defines properties it relies on, if this value
+    #   'import_ec2'  - CloudMaker::EC2 defines properties it relies on, if this value
     #                   is true then we pull those property definitions in.
     #
     # Returns a CloudMaker object
@@ -83,7 +83,7 @@ module CloudMaker
       self.imports = extract_imports!(cloud_config)
       self.cloud_config = cloud_config
 
-      self.import(self.class.new(Ec2::CLOUD_MAKER_CONFIG)) if (extra_options['import_ec2'])
+      self.import(self.class.new(EC2::CLOUD_MAKER_CONFIG)) if (extra_options['import_ec2'])
       self.imports.reverse.each do |import_path|
         self.import(self.class.from_yaml(import_path))
       end

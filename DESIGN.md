@@ -43,7 +43,7 @@ The configuration is generally loaded from a YAML file, but is accessed internal
 
 ### Cloud Interaction (EC2)
 
-The CloudMaker::Ec2 class handles launching an instance with the appropriate user data and performing any post-launch meta configuration (such as tags, elastic ips, etc). It relies on access to a CloudMaker::Config object to provide the content/configuration for these interactions. While initially only EC2 support is on the roadmap the separation of configuration from instance instantiation should allow flexibility if supporting other platforms becomes desirable.
+The CloudMaker::EC2 class handles launching an instance with the appropriate user data and performing any post-launch meta configuration (such as tags, elastic ips, etc). It relies on access to a CloudMaker::Config object to provide the content/configuration for these interactions. While initially only EC2 support is on the roadmap the separation of configuration from instance instantiation should allow flexibility if supporting other platforms becomes desirable.
 
 ### CLI
 
@@ -102,7 +102,7 @@ Using YAML as our configuration format has the advantage of making our configura
 
 ### EC2
 
-CloudMaker::Ec2 provides a wrapper around RightAws that pulls configuration information from a CloudMaker::Config object and uses it to launch an instance and to archive configuration information about that instance. It also provides an interface for later retrieving the configuration information for a previously launched instance. It relies on several ```cloud-maker``` properties.
+CloudMaker::EC2 provides a wrapper around RightAws that pulls configuration information from a CloudMaker::Config object and uses it to launch an instance and to archive configuration information about that instance. It also provides an interface for later retrieving the configuration information for a previously launched instance. It relies on several ```cloud-maker``` properties.
 
 * ```ami``` (required) - The AMI ID to use for the new instance eg 'ami-82fa58eb'
 * ```instance_type``` (required) - The AWS instance type, eg. 'm1.small'
