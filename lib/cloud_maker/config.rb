@@ -90,10 +90,12 @@ module CloudMaker
       self.imports.reverse.each do |import_path|
         self.import(self.class.from_yaml(import_path))
       end
+      self['tags'] ||= {}
+      self['tags']['cloud_maker_config'] = self.config_name
     end
 
     def config_name
-      files = self.imports
+      files = self.imports.dup
       files.push self.extra_options['config_path'] if self.extra_options['config_path']
 
       files.reverse.map { |import|
