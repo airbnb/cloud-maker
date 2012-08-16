@@ -100,7 +100,6 @@ module CloudMaker
       else
         region = ec2 # .instances.create will just put things in the default region
       end
-
       instance = region.instances.create(
         :image_id => cloud_maker_config['ami'],
         :security_groups => cloud_maker_config['security_group'],
@@ -110,7 +109,10 @@ module CloudMaker
         :user_data => user_data
       )
 
-      instance.tags.set(cloud_maker_config["tags"]) if cloud_maker_config["tags"]
+      tags = cloud_maker_config["tags"] || {}
+      tags['cloud_maker_config'] = cloud_maker_config.config_name
+      instance.tags.set(tags)
+
       instance.associate_elastic_ip(cloud_maker_config["elastic_ip"]) if cloud_maker_config["elastic_ip"]
 
       archiver = S3Archiver.new(
@@ -165,6 +167,9 @@ module CloudMaker
       #
       # Returns a hash of properties for the instance.
       def instance_to_hash(instance)
+        tags = {}
+
+
         {
           :instance_id => instance.id,
           :ami => instance.image_id,
@@ -174,7 +179,7 @@ module CloudMaker
           :private_ip_address => instance.private_ip_address,
           :key_name => instance.key_name,
           :owner_id => instance.owner_id,
-          :status => instance.status
+          :status => instance.status,
         }
       end
     end

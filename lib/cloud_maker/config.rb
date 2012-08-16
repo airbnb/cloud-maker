@@ -84,9 +84,21 @@ module CloudMaker
       self.cloud_config = cloud_config
 
       self.import(self.class.new(EC2::CLOUD_MAKER_CONFIG)) if (extra_options['import_ec2'])
+
+      # It's important here that reverse duplicates the imports array as executing the import will
+      # add the imported configs imports to the list and we do NOT want to reimport those as well.
       self.imports.reverse.each do |import_path|
         self.import(self.class.from_yaml(import_path))
       end
+    end
+
+    def config_name
+      files = self.imports
+      files.push self.extra_options['config_path'] if self.extra_options['config_path']
+
+      files.reverse.map { |import|
+        import[import.rindex('/')+1..-1].gsub(/\..*/, '').gsub(/[^\w]/, '-')
+      }.join(':')
     end
 
     # Public: Check if the CloudMaker config is in a valid state.
@@ -340,6 +352,7 @@ module CloudMaker
     def import(cloud_maker_config)
       self.options = cloud_maker_config.options.deep_merge!(self.options)
       self.includes = cloud_maker_config.includes.concat(self.includes).uniq
+      self.imports = cloud_maker_config.imports.concat(self.imports).uniq
       self.cloud_config = cloud_maker_config.cloud_config.deep_merge!(self.cloud_config)
       self.extra_options = cloud_maker_config.extra_options.deep_merge!(self.extra_options)
     end
