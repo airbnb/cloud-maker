@@ -1,1 +1,2 @@
 cloud-maker-*.gem
+/Gemfile.lock
