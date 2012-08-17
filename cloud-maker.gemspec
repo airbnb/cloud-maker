@@ -1,8 +1,8 @@
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.3.0'
-  s.date        = '2012-08-15'
-  s.summary     = "Launch and perform initial configuration of cloud servers."
+  s.version     = '0.4.0'
+  s.date        = '2012-08-17'
+  s.summary     = "Extends Ubuntu CloudInit to launch and configure cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
   s.email       = 'nathan.baxter@airbnb.com'
   s.files       = Dir['lib/**/*.rb'] + Dir['bin/*']
