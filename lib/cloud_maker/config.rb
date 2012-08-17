@@ -97,12 +97,12 @@ module CloudMaker
       self.imports = extract_imports!(cloud_config)
       self.cloud_config = cloud_config
 
-      self.import(self.class.new(EC2::CLOUD_MAKER_CONFIG)) if (extra_options['import_ec2'])
+      self.import(self.class.new(EC2::CLOUD_MAKER_CONFIG, 'config_path' => "EC2")) if (extra_options['import_ec2'])
 
       # It's important here that reverse duplicates the imports array as executing the import will
       # add the imported configs imports to the list and we do NOT want to reimport those as well.
       self.imports.reverse.each do |import_path|
-        self.import(self.class.from_yaml(import_path, self.extra_options))
+        self.import(self.class.from_yaml(import_path, self.extra_options.merge('import_ec2' => false)))
       end
       self['tags'] ||= {}
       self['tags']['cloud_maker_config'] = self.config_name
@@ -113,7 +113,10 @@ module CloudMaker
       files.push self.extra_options['config_path'] if self.extra_options['config_path']
 
       files.reverse.map { |import|
-        import[import.rindex('/')+1..-1].gsub(/\..*/, '').gsub(/[^\w]/, '-')
+        if import.rindex('/')
+          import = import[import.rindex('/')+1..-1]
+        end
+        import.gsub(/\..*/, '').gsub(/[^\w]/, '-')
       }.join(':')
     end
 
@@ -267,8 +270,8 @@ module CloudMaker
           end
         else
           begin
-            full_path = File.expand_path(instance_config_yaml)
-            cloud_yaml = File.open(full_path, "r") #Right_AWS will base64 encode this for us
+            instance_config_yaml = File.expand_path(instance_config_yaml)
+            cloud_yaml = File.open(instance_config_yaml, "r") #Right_AWS will base64 encode this for us
           rescue
             raise FileContentNotFound.new("Unable to access the configuration via your local file system from #{full_path}.", instance_config_yaml)
           end
@@ -278,7 +281,7 @@ module CloudMaker
         # it like this makes sanity checking other missing values easy.
         config = YAML::load(cloud_yaml) || {}
 
-        CloudMaker::Config.new(config, options.merge('config_path' => full_path))
+        CloudMaker::Config.new(config, options.merge('config_path' => instance_config_yaml))
       end
     end
 

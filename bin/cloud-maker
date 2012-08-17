@@ -230,7 +230,7 @@ class CloudMakerCLI < Thor
       else
         exit 1
       end
-    rescue Exception => e
+    rescue CloudMaker::Config::ContentNotFound => e
       say e.to_s.red
       exit 1
     end
