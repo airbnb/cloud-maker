@@ -231,7 +231,6 @@ class CloudMakerCLI < Thor
         exit 1
       end
     rescue Exception => e
-      require 'pry';binding.pry
       say e.to_s.red
       exit 1
     end
