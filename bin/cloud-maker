@@ -4,6 +4,17 @@ require 'cloud-maker'
 class CloudMakerCLI < Thor
   include Thor::Actions
 
+  CONFIG_PATH = '~/.cloud-maker.yaml'
+
+  def initialize(*args)
+    super
+    begin
+      @global_options = YAML::load(File.open(File.expand_path(CONFIG_PATH)))
+    rescue
+      @global_options = {}
+    end
+  end
+
   map "--version" => :version, "-v" => :version
 
   desc "user_data [INSTANCE_CONFIG_YAML]", "Generate the Cloud Init user data for an instance described by INSTANCE_CONFIG_YAML"
@@ -26,6 +37,37 @@ class CloudMakerCLI < Thor
   desc "version", "Report the current version of CloudMaker"
   def version
     say "cloud-maker #{Gem::Specification.find_by_name('cloud-maker').version.version}"
+  end
+
+  desc "authorize_github", "Fetch an API authorization token from github."
+  def authorize_github
+    say "This will generate an OAuth token for use when fetching #{"github://".cyan} urls. It will be saved in #{CONFIG_PATH.cyan}."
+    say "You can remove this authorization from the GitHub interface if needed."
+    say "Your password will not be saved to disk.".green
+    user = ask("What is your GitHub #{"username".cyan}?")
+    password = ask("What is your GitHub #{"password".cyan}?")
+    begin
+      response = JSON.parse(RestClient::Request.new(
+        :method => "POST",
+        :url => 'https://api.github.com/authorizations',
+        :user => user,
+        :password => password,
+        :payload => {
+          :note => "CloudMaker",
+          :note_url => "https://github.com/airbnb/cloud-maker",
+          :scopes => ["repo"]
+        }.to_json,
+        :headers => {
+          :content_type => 'application/json'
+        }
+      ).execute)
+      @global_options['github_token'] = response["token"]
+      save_options!
+      say "Your GitHub credentials have been successfully updated.".green
+    rescue Exception => e
+      say e.to_s.red
+      say "Your GitHub credentials could not be updated.".red
+    end
   end
 
   desc "terminate [AWS_INSTANCE_ID]", "Terminate the specified AWS instance"
@@ -167,8 +209,33 @@ class CloudMakerCLI < Thor
     puts
   end
 
+  def save_options!
+    path = File.expand_path(CONFIG_PATH)
+    File.open(path, 'w+') {|f| f.write(@global_options.to_yaml)}
+  end
+
   def build_config(instance_config_yaml, options)
-    config = CloudMaker::Config.from_yaml(instance_config_yaml, 'import_ec2' => true)
+    begin
+      config = CloudMaker::Config.from_yaml(instance_config_yaml, 'import_ec2' => true, 'github_token' => @global_options['github_token'])
+    rescue CloudMaker::Config::GitHubContentNotFound => e
+      say e.to_s.red
+      if @global_options['github_token']
+        say "You do have GitHub OAuth configured, however you can redo the configuration if the current OAuth token is no longer valid.".yellow
+      else
+        say "You don't have a GitHub OAuth token configured, if this is a private repo doing so is necessary.".yellow
+      end
+      if yes?("Would you like to configure OAuth and retry now?")
+        authorize_github
+        retry
+      else
+        exit 1
+      end
+    rescue Exception => e
+      require 'pry';binding.pry
+      say e.to_s.red
+      exit 1
+    end
+
     options.set.each_pair {|key, val| config[key] = val}
 
     config['tags'] ||= {}

@@ -1,8 +1,10 @@
+require 'json'
 require 'yaml'
 require 'thor'
 require 'colorize'
 require 'deep_merge'
 require 'aws-sdk'
+require 'rest-client'
 
 require 'cloud_maker/config'
 require 'cloud_maker/ec2'

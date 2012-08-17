@@ -1,5 +1,19 @@
 module CloudMaker
   class Config
+    class ContentNotFound < RuntimeError
+      attr_accessor :path
+      def initialize(message, path)
+        super(message)
+        self.path = path
+      end
+    end
+    class GitHubContentNotFound < ContentNotFound
+    end
+    class HTTPContentNotFound < ContentNotFound
+    end
+    class FileContentNotFound < ContentNotFound
+    end
+
     # Public: Gets/Sets the CloudMaker specific properties. The options hash
     # is formatted as:
     #    {
@@ -88,7 +102,7 @@ module CloudMaker
       # It's important here that reverse duplicates the imports array as executing the import will
       # add the imported configs imports to the list and we do NOT want to reimport those as well.
       self.imports.reverse.each do |import_path|
-        self.import(self.class.from_yaml(import_path))
+        self.import(self.class.from_yaml(import_path, self.extra_options))
       end
       self['tags'] ||= {}
       self['tags']['cloud_maker_config'] = self.config_name
@@ -222,14 +236,42 @@ module CloudMaker
       # options - Any options to pass through as options to CloudMaker::Config::initialize
       #
       # Returns a new Config
-      # Raises: Exception if the file doesn't exist.
+      # Raises: GitHubContentNotFound, HTTPContentNotFound, or FileContentNotFound if the file doesn't exist.
       # Raises: SyntaxError if the YAML file is invalid.
       def from_yaml(instance_config_yaml, options={})
-        begin
-          full_path = File.expand_path(instance_config_yaml)
-          cloud_yaml = File.open(full_path, "r") #Right_AWS will base64 encode this for us
-        rescue
-          raise "ERROR: The path to the CloudMaker config is incorrect"
+        if instance_config_yaml =~ /\Agithub:\/\//
+          begin
+            user, repo, *path = instance_config_yaml.split('/')[2..-1]
+            begin
+              if options['github_token']
+                response = RestClient.get(
+                  "https://api.github.com/repos/#{user}/#{repo}/contents/#{path.join('/')}",
+                  "Authorization" => "token #{options['github_token']}"
+                )
+              else
+                response = RestClient.get("https://api.github.com/repos/#{user}/#{repo}/contents/#{path.join('/')}")
+              end
+              cloud_yaml = Base64.decode64(JSON.parse(response)['content'])
+            rescue
+              raise GitHubContentNotFound.new(
+                "Unable to access the configuration #{instance_config_yaml} from GitHub.",
+                instance_config_yaml
+              )
+            end
+          end
+        elsif instance_config_yaml =~ /\Ahttps?:\/\//
+          begin
+            cloud_yaml = RestClient.get(instance_config_yaml)
+          rescue
+            raise HTTPContentNotFound.new("Unable to access the configuration via HTTP from #{instance_config_yaml}.", instance_config_yaml)
+          end
+        else
+          begin
+            full_path = File.expand_path(instance_config_yaml)
+            cloud_yaml = File.open(full_path, "r") #Right_AWS will base64 encode this for us
+          rescue
+            raise FileContentNotFound.new("Unable to access the configuration via your local file system from #{full_path}.", instance_config_yaml)
+          end
         end
 
         # loading a blank config file returns false, it's an odd degenerate case but handling
