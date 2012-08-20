@@ -180,7 +180,7 @@ class CloudMakerCLI < Thor
     string = string.dup
     string.gsub!(/([\{\}\[\]])/, '\1'.magenta)
     string.gsub!(/([\,])/, '\1'.yellow)
-    string.gsub!(/([\:\"\']?[0-9a-zA-Z_]*[\"\']?)=>/, '\1'.cyan + '=>')
+    string.gsub!(/([\:\"\']?[0-9a-zA-Z_\:]*[\"\']?)=>/, '\1'.cyan + '=>')
     string
   end
 
