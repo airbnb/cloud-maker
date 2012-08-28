@@ -35,6 +35,10 @@ module CloudMaker
           'default' => 'default',
           'required' => true,
           'description' => 'The Amazon EC2 security group to launch the instance with.'
+        },
+        'iam_role' => {
+          'default' => '',
+          'description' => 'The IAM instance profile name or ARN you would like to use.'
         }
       }
     }
@@ -102,6 +106,7 @@ module CloudMaker
       end
       instance = region.instances.create(
         :image_id => cloud_maker_config['ami'],
+        :iam_instance_profile => cloud_maker_config['iam_role'],
         :security_groups => cloud_maker_config['security_group'],
         :instance_type => cloud_maker_config['instance_type'],
         :key_name => cloud_maker_config['key_pair'],
