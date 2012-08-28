@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.5.0'
+  s.version     = '0.5.1'
   s.date        = '2012-08-28'
   s.summary     = "Extends Ubuntu CloudInit to launch and configure cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "colorize"
   s.add_runtime_dependency "thor", "~> 0.15"
   s.add_runtime_dependency "aws-sdk", '~> 1.6'
+  s.add_runtime_dependency "rest-client", '~> 1.6'
   s.add_runtime_dependency "deep_merge", '~> 1.0'
   s.add_development_dependency "pry"
 end

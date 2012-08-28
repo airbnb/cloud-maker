@@ -1,5 +1,3 @@
-require 'right_aws'
-
 module CloudMaker
   class EC2
     # Public: Gets/Sets the AWS access key.
@@ -115,7 +113,13 @@ module CloudMaker
       )
 
       instance.tags.set(cloud_maker_config['tags']) if cloud_maker_config['tags']
-      instance.associate_elastic_ip(cloud_maker_config["elastic_ip"]) if cloud_maker_config["elastic_ip"]
+
+      if cloud_maker_config["elastic_ip"]
+        while instance.status == :pending
+          #wait
+        end
+        instance.associate_elastic_ip(cloud_maker_config["elastic_ip"])
+      end
 
       archiver = S3Archiver.new(
         :instance_id => instance.id,
