@@ -45,7 +45,13 @@ class CloudMakerCLI < Thor
     say "You can remove this authorization from the GitHub interface if needed."
     say "Your password will not be saved to disk.".green
     user = ask("What is your GitHub #{"username".cyan}?")
+    state = Termios.getattr(STDIN)
+    new_settings = state.dup
+    new_settings.c_lflag &= ~(Termios::ECHO | Termios::ICANON)
+    new_settings.c_cc[Termios::VMIN] = 1
+    Termios.setattr(STDIN, Termios::TCSANOW, new_settings)
     password = ask("What is your GitHub #{"password".cyan}?")
+    Termios.setattr(STDIN, Termios::TCSANOW, state)
     begin
       response = JSON.parse(RestClient::Request.new(
         :method => "POST",

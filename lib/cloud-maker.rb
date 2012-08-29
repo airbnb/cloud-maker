@@ -5,6 +5,7 @@ require 'colorize'
 require 'deep_merge'
 require 'aws-sdk'
 require 'rest-client'
+require 'termios'
 
 require 'cloud_maker/config'
 require 'cloud_maker/ec2'

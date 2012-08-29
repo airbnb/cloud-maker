@@ -13,5 +13,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "aws-sdk", '~> 1.6'
   s.add_runtime_dependency "rest-client", '~> 1.6'
   s.add_runtime_dependency "deep_merge", '~> 1.0'
+  s.add_runtime_dependency 'ruby-termios', '~> 0.9'
   s.add_development_dependency "pry"
 end
