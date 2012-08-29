@@ -27,6 +27,7 @@ module CloudMaker
           'description' => "The name of an Amazon key pair, so you can actually login to the instance."
         },
         'elastic_ip' => {
+          'default' => '',
           'description' => "An elastic IP address you control that you would like to associate to the instance."
         },
         'security_group' => {
@@ -37,6 +38,10 @@ module CloudMaker
         'iam_role' => {
           'default' => '',
           'description' => 'The IAM instance profile name or ARN you would like to use.'
+        },
+        'cname' => {
+          'default' => '',
+          'description' => "A dns entry you would like to CNAME to this instance."
         }
       }
     }
@@ -114,11 +119,33 @@ module CloudMaker
 
       instance.tags.set(cloud_maker_config['tags']) if cloud_maker_config['tags']
 
-      if cloud_maker_config["elastic_ip"]
+      if cloud_maker_config.elastic_ip? || cloud_maker_config.cname?
         while instance.status == :pending
           #wait
         end
-        instance.associate_elastic_ip(cloud_maker_config["elastic_ip"])
+        instance.associate_elastic_ip(cloud_maker_config["elastic_ip"]) if cloud_maker_config.elastic_ip
+
+        if cloud_maker_config.cname?
+          r53 = AWS::Route53::Client.new(:access_key_id => self.aws_access_key_id, :secret_access_key => self.aws_secret_access_key)
+
+          zone = r53.list_hosted_zones[:hosted_zones].select {|zone|
+            cloud_maker_config['cname'] + '.' =~ /#{Regexp.escape(zone[:name])}$/
+          }.first
+
+          r53.change_resource_record_sets(
+            :hosted_zone_id => zone[:id],
+            :change_batch => {
+              :comment => "CloudMaker initialization of #{instance_id}.", :changes => [{
+                :action => "CREATE", :resource_record_set => {
+                  :name => cloud_maker_config['cname'],
+                  :type => 'CNAME',
+                  :ttl => 60,
+                  :resource_records => [{:value => instance.dns_name}]
+                }
+              }]
+            }
+          )
+        end
       end
 
       archiver = S3Archiver.new(

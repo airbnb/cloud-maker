@@ -108,6 +108,20 @@ module CloudMaker
       self['tags']['cloud_maker_config'] = self.config_name
     end
 
+    def method_missing(method=nil, *args)
+      if method.to_s[-1] == "?"
+        key_name = method.to_s[0, method.to_s.length-1]
+        value = self[key_name]
+        if value.respond_to? :empty?
+          !value.empty?
+        else
+          !value.nil?
+        end
+      else
+        super
+      end
+    end
+
     def config_name
       files = self.imports.dup
       files.push self.extra_options['config_path'] if self.extra_options['config_path']
