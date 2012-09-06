@@ -123,7 +123,7 @@ module CloudMaker
         while instance.status == :pending
           #wait
         end
-        instance.associate_elastic_ip(cloud_maker_config["elastic_ip"]) if cloud_maker_config.elastic_ip
+        instance.associate_elastic_ip(cloud_maker_config["elastic_ip"]) if cloud_maker_config.elastic_ip?
 
         if cloud_maker_config.cname?
           r53 = AWS::Route53::Client.new(:access_key_id => self.aws_access_key_id, :secret_access_key => self.aws_secret_access_key)
@@ -135,7 +135,7 @@ module CloudMaker
           r53.change_resource_record_sets(
             :hosted_zone_id => zone[:id],
             :change_batch => {
-              :comment => "CloudMaker initialization of #{instance_id}.", :changes => [{
+              :comment => "CloudMaker initialization of #{instance.instance_id}.", :changes => [{
                 :action => "CREATE", :resource_record_set => {
                   :name => cloud_maker_config['cname'],
                   :type => 'CNAME',

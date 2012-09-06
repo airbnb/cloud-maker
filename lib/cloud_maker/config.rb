@@ -202,8 +202,9 @@ module CloudMaker
           env_run_cmds.push(set_environment_variable_cmd(key, properties["value"]))
         end
       end
+      env_run_cmds.push("touch /var/lib/cloud/cloud_init_complete")
 
-      return "#cloud-boothook\n#!/bin/sh\n#{env_run_cmds.join("\n")}\n"
+      return "#cloud-boothook\n#!/bin/sh\nif [ ! -f /var/lib/cloud/cloud_init_complete ]; then\n#{env_run_cmds.join("\n")}\nfi\n"
     end
 
 
@@ -287,7 +288,7 @@ module CloudMaker
             instance_config_yaml = File.expand_path(instance_config_yaml)
             cloud_yaml = File.open(instance_config_yaml, "r") #Right_AWS will base64 encode this for us
           rescue
-            raise FileContentNotFound.new("Unable to access the configuration via your local file system from #{full_path}.", instance_config_yaml)
+            raise FileContentNotFound.new("Unable to access the configuration via your local file system from #{instance_config_yaml}.", instance_config_yaml)
           end
         end
 

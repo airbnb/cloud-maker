@@ -52,6 +52,7 @@ class CloudMakerCLI < Thor
     Termios.setattr(STDIN, Termios::TCSANOW, new_settings)
     password = ask("What is your GitHub #{"password".cyan}?")
     Termios.setattr(STDIN, Termios::TCSANOW, state)
+    puts
     begin
       response = JSON.parse(RestClient::Request.new(
         :method => "POST",
