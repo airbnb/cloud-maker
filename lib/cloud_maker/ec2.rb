@@ -117,7 +117,16 @@ module CloudMaker
         :user_data => user_data
       )
 
-      instance.tags.set(cloud_maker_config['tags']) if cloud_maker_config['tags']
+      begin
+        instance.tags.set(cloud_maker_config['tags']) if cloud_maker_config['tags']
+      rescue AWS::EC2::Errors::InvalidInstanceID::NotFound => e
+        retries ||= 0
+        if retries < 5
+          sleep(2**retries)
+          retries += 1
+          retry
+        end
+      end
 
       if cloud_maker_config.elastic_ip? || cloud_maker_config.cname?
         while instance.status == :pending
