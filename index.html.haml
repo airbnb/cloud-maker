@@ -40,7 +40,7 @@
       %hr/
       .row.start-container
         .span8.main-copy.quickstart
-          %p.quickstart-text It's easy to get started:
+          %p It's easy to get started - create a config file:
           .filename example.cm.yaml
           %pre.prettyprint.linenums.lang-yaml.quickstart-code
             :preserve
@@ -60,6 +60,8 @@
                 all: '| tee -a /var/log/cloud-init-output.log'
 
           %p
+            and launch it from the command line:
+            %br
             %code cloud-maker launch example.cm.yaml
 
           %p.quickstart-text For full API documentation, keep reading.
