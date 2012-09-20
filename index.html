@@ -1,0 +1,710 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <title>CloudMaker</title>
+    <link href='assets/google-code-prettify/prettify.css' rel='stylesheet' type='text/css' />
+    <link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css' />
+    <link href='assets/o2.css' rel='stylesheet' type='text/css' />
+    <link href='assets/custom.css' rel='stylesheet' type='text/css' />
+  </head>
+  <body>
+    <div class='container main-container'>
+      <div class='row'>
+        <div class='span12'>
+          <h1 class='logo'>
+            <a class='logo-link' href='/cloud-maker'>
+              <span class='logo-prefix'>CloudMaker</span>
+            </a>
+          </h1>
+        </div>
+      </div>
+      <div class='row main-copy'>
+        <div class='span12'>
+          <p>
+            <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+            is a tool for launching and configuring EC2 instances. It works as
+            an extension to the
+            <a href='https://help.ubuntu.com/community/CloudInit'>Ubuntu CloudInit</a>
+            system. It extends the configuration format with a composition system
+            and options to describe how you want an instance to be launched.
+          </p>
+          <p>
+            The goal of the project is to make building and launching instances simple and repeatable.
+            It accomplishes this by leveraging existing toolchains rather than forcing people
+            to learn a new and complicated system.
+            The code is hosted on
+            <a href='https://github.com/airbnb/cloud-maker'>GitHub</a>,
+            and distributed under the BSD License.
+          </p>
+          <p>
+            <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+            was built by
+            <a href='http://www.airbnb.com/jobs'>Airbnb</a>
+            and sees daily production use there today.
+          </p>
+        </div>
+      </div>
+      <hr />
+      <div class='row start-container'>
+        <div class='span8 main-copy quickstart'>
+          <p class='quickstart-text'>It's easy to get started:</p>
+          <div class='filename'>example.cm.yaml</div>
+          <pre class='prettyprint linenums lang-yaml quickstart-code'>#cloud-maker&#x000A;cloud-maker:&#x000A;  ami: 'ami-82fa58eb' # Ubuntu 12.04&#x000A;  instance_type: 'm1.small'&#x000A;  key_pair: 'default'&#x000A;  security_group: 'default'&#x000A;  s3_archive_bucket: 'cloud-maker-instances'&#x000A;  tags:&#x000A;    Name: 'CloudMaker Example'&#x000A;&#x000A;#cloud-config&#x000A;output:&#x000A;  # generate a detailed log of the cloud init&#x000A;  all: '| tee -a /var/log/cloud-init-output.log'&#x000A;</pre>
+          <p>
+            <code>cloud-maker launch example.cm.yaml</code>
+          </p>
+          <p class='quickstart-text'>For full API documentation, keep reading.</p>
+        </div>
+      </div>
+      <div class='navbar' id='reference'>
+        <div class='navbar-inner'>
+          <div class='container'>
+            <a class='brand' href='#reference'>
+              <span class='cloud-maker-logo'>CloudMaker</span>
+              Reference Guide
+            </a>
+            <ul class='nav'>
+              <li>
+                <a href='#configuration-format'>Configuration Format</a>
+              </li>
+              <li class='divider-vertical'></li>
+              <li>
+                <a href='#ec2-properties'>EC2 Properties</a>
+              </li>
+              <li class='divider-vertical'></li>
+              <li>
+                <a href='#cli'>Command Line Interface</a>
+              </li>
+              <li class='divider-vertical'></li>
+              <li>
+                <a href='#notes'>Notes</a>
+              </li>
+            </ul>
+            <ul class='nav pull-right'>
+              <li>
+                <a class='pink btn fork' href='http://github.com/airbnb/cloud-maker'>
+                  <i class='icon icon-github'></i>
+                  Fork Me
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='span12'>
+          <div class='panel-padding'>
+            <div class='row-fluid api-doc' id='configuration-format'>
+              <div class='span8'>
+                <h2>
+                  <a class='api-header-link' href='#configuration-format'>
+                    Configuration Format
+                  </a>
+                </h2>
+                <p class='api-copy'>
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  uses YAML as a configuration file format. It supports all properties of
+                  <a href='https://help.ubuntu.com/community/CloudInit'>Ubuntu CloudInit</a>
+                  but extends it to support composability of configurations, setting of environment
+                  variables, reading values from shell scripts, and launching
+                  <a href='http://aws.amazon.com/ec2/'>EC2</a>
+                  instances.
+                </p>
+              </div>
+              <div class='span3 offset1'>
+                <div class='panel-background-white panel-border summary'>
+                  <div class='panel-header panel-header-dark'>
+                    <h3>Table of Contents</h3>
+                  </div>
+                  <div class='panel-padding'>
+                    <ul class='unstyled'>
+                      <li class='pull-right'>
+                        <a href='#configuration-format'>Summary</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#configuration-composability'>Composability</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#configuration-custom-properties'>Custom Properties</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#configuration-shell-execution'>Shell Execution</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='configuration-composability'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#configuration-composability'>
+                    Composability
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  Using DRY as a guiding principle
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  allows you to import config files into each other. This functionality
+                  is implemented as a deep merge with the last configuration winning.
+                  Array merging is done via concatenation with duplicates removed. An example should
+                  serve to illustrate this.
+                </p>
+                <p class='api-copy'>
+                  <div class='filename'>
+                    example1.cm.yaml
+                  </div>
+                  <pre class='prettyprint linenums lang-yaml quickstart-code'>cloud-maker:&#x000A;  foo: bar&#x000A;  another_value: tom&#x000A;  numbers:&#x000A;  - 1&#x000A;  - 2&#x000A;  - 3</pre>
+                </p>
+                <p class='api-copy'>
+                  <div class='filename'>
+                    example2.cm.yaml
+                  </div>
+                  <pre class='prettyprint linenums lang-yaml quickstart-code'>cloud-maker:&#x000A;  foo: baz&#x000A;  another_value: bob&#x000A;  numbers:&#x000A;  - 1&#x000A;  - 4&#x000A;  - 5&#x000A;</pre>
+                </p>
+                <p class='api-copy'>
+                  <div class='filename'>
+                    import-example.cm.yaml
+                  </div>
+                  <pre class='prettyprint linenums lang-yaml quickstart-code'>cloud-maker:&#x000A;  foo: qux&#x000A;  numbers:&#x000A;  - 6&#x000A;&#x000A;import:&#x000A;- example1.cm.yaml&#x000A;- example2.cm.yaml</pre>
+                </p>
+                <p class='api-copy'>
+                  Given
+                  <code>example1.cm.yaml</code>
+                  and
+                  <code>example2.cm.yaml</code>
+                  then
+                  <code>import-example.cm.yaml</code>
+                  will be identical to the following:
+                </p>
+                <p class='api-copy'>
+                  <div class='filename'>
+                    merged-example.cm.yaml
+                  </div>
+                  <pre class='prettyprint linenums lang-yaml quickstart-code'>cloud-maker:&#x000A;  foo: qux&#x000A;  another_value: bob&#x000A;  numbers:&#x000A;  - 1&#x000A;  - 2&#x000A;  - 3&#x000A;  - 4&#x000A;  - 5&#x000A;  - 6&#x000A;</pre>
+                </p>
+                <h4>
+                  Import URIs
+                </h4>
+                <p class='api-copy'>
+                  You can specify the location of
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  configs in multiple ways:
+                </p>
+                <ul class='api-list'>
+                  <li>
+                    <code>github://user/repo/path/to/file.cm.yaml</code>
+                    which will use the GitHub API to fetch the file.
+                    <br />
+                    <span class='label label-red'>Note</span>
+                    If it is a private repository you will be prompted for your credentials the
+                    first time you access it. This will generate an OAuth token
+                    that will be saved and used in the future. You can revoke access
+                    to the token at anytime from the GitHub website.
+                  </li>
+                  <li>
+                    <code>http(s)://www.yourdomain.com/path/to/file.cm.yaml</code>
+                    which will fetch the file via HTTP.
+                  </li>
+                  <li>
+                    <code>/local/path/to/file.cm.yaml</code>
+                    Will access the path from your local filesystem.
+                    <br />
+                    <span class='label label-red'>Note</span>
+                    If you use a relative path it will
+                    be relative to the directory you run
+                    <code>cloud-maker</code>
+                    from.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='configuration-custom-properties'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#configuration-custom-properties'>
+                    Custom Properties
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  Custom properties are passed to the instance via the
+                  <code>cloud-maker</code>
+                  property.
+                  <code>cloud-maker</code>
+                  is a hash of values. By default each of these values will be set
+                  as an environment variable on the launched instance. Custom properties
+                  can either be set as
+                  <code>key: value</code>
+                  pairs, or as
+                  <code>key: configuration_hash</code>
+                  as described below. All configuration hash properties are optional and will
+                  have their default values used if not specified.
+                </p>
+                <ul class='api-list'>
+                  <li>
+                    <code>default:</code>
+                    Set a default value for the property. (default: blank)
+                  </li>
+                  <li>
+                    <code>environment:</code>
+                    Should the property be available as an environment variable? (default: true)
+                  </li>
+                  <li>
+                    <code>required:</code>
+                    This property must be set for the instance to launch. (default: false)
+                  </li>
+                  <li>
+                    <code>description:</code>
+                    Shown by the CLI when prompting for a value. (default: blank)
+                  </li>
+                  <li>
+                    <code>value:</code>
+                    The value of the property (if you just do
+                    <code>key: value</code>
+                    you are actually setting this). (default: blank)
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='configuration-shell-execution'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#configuration-shell-execution'>
+                    Shell Execution
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  One of the guiding principlals of
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  is that it should be able to work with existing tools.
+                  To facilitate that it provides a custom node type that executes
+                  a local shell command and is replaced by the value. To use
+                  it prefix your shell command with
+                  <code>!shell-script</code>
+                  as in the example below. This example sets an environment variable
+                  on the target instance with the local username of the person who
+                  launched the instance.
+                </p>
+                <p class='api-copy'>
+                  <div class='filename'>
+                    shell-example.cm.yaml
+                  </div>
+                  <pre class='prettyprint linenums lang-yaml quickstart-code'>cloud-maker:&#x000A;  launched_by: !shell-script whoami&#x000A;</pre>
+                </p>
+              </div>
+            </div>
+            <hr />
+          </div>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='span12'>
+          <div class='panel-padding'>
+            <div class='row-fluid api-doc' id='ec2-properties'>
+              <div class='span8'>
+                <h2>
+                  <a class='api-header-link' href='#configuration-format'>
+                    EC2 Properties
+                  </a>
+                </h2>
+                <p class='api-copy'>
+                  EC2 properties are all passed in via the
+                  <code>cloud-maker</code>
+                  hash. These properties will be used locally by
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  to launch the instance.
+                </p>
+              </div>
+              <div class='span3 offset1'>
+                <div class='panel-background-white panel-border summary'>
+                  <div class='panel-header panel-header-dark'>
+                    <h3>Table of Contents</h3>
+                  </div>
+                  <div class='panel-padding'>
+                    <ul class='unstyled'>
+                      <li class='pull-right'>
+                        <a href='#ec2-properties'>Summary</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#ec2-properties-list'>Properties List</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#ec2-properties-caveats'>Caveats</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='ec2-properties-list'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#configuration-composability'>
+                    Properties List
+                  </a>
+                </h3>
+                <ul class='api-list'>
+                  <li>
+                    <code>ami</code>
+                    The Amazon AMI ID for the instance. (required)
+                  </li>
+                  <li>
+                    <code>instance_type</code>
+                    The Amazon instance type, eg. m1.small. (required)
+                  </li>
+                  <li>
+                    <code>availability_zone</code>
+                    The Amazon availability zone, eg. us-east-1a (required)
+                  </li>
+                  <li>
+                    <code>s3_archive_bucket</code>
+                    The S3 bucket where information about the instance should be stored. (required)
+                  </li>
+                  <li>
+                    <code>key_pair</code>
+                    The name of an Amazon key pair, so you can actually login to the instance.(default: "")
+                  </li>
+                  <li>
+                    <code>elastic_ip</code>
+                    An elastic IP address you control that you would like to associate to the instance. (default: "")
+                  </li>
+                  <li>
+                    <code>security_group</code>
+                    The Amazon EC2 security group to launch the instance with. (default: "default")
+                  </li>
+                  <li>
+                    <code>iam_role</code>
+                    The IAM instance profile name or ARN you would like to use. (default: "")
+                  </li>
+                  <li>
+                    <code>cname</code>
+                    A dns entry you would like to CNAME to this instance. (default: "")
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='ec2-properties-caveats'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#configuration-custom-properties'>
+                    Caveats
+                  </a>
+                </h3>
+                <ul class='api-list'>
+                  <li>
+                    Elastic IPs need to have been created in advance.
+                  </li>
+                  <li>
+                    CNAMEs must not already exist in Route 53 and will not be removed when the instance is terminated.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <hr />
+          </div>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='span12'>
+          <div class='panel-padding'>
+            <div class='row-fluid api-doc' id='cli'>
+              <div class='span8'>
+                <h2>
+                  <a class='api-header-link' href='#cli'>
+                    Command Line Interface
+                  </a>
+                </h2>
+                <p class='api-copy'>
+                  The command line interface
+                  <code>cloud-maker</code>
+                  allows you to launch instances, retrieve information about them, and
+                  to terminate them. Data about an instance is stored in an S3 bucket
+                  (set using the
+                  <code>s3_archive_bucket</code>
+                  property). All interactions with the CLI take the form of&nbsp;<code>cloud-maker &lt;command&gt; [arguments] [options]</code>.
+                </p>
+              </div>
+              <div class='span3 offset1'>
+                <div class='panel-background-white panel-border summary'>
+                  <div class='panel-header panel-header-dark'>
+                    <h3>Table of Contents</h3>
+                  </div>
+                  <div class='panel-padding'>
+                    <ul class='unstyled'>
+                      <li class='pull-right'>
+                        <a href='#cli'>Summary</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#cli-launch'>Launch</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#cli-info'>Info</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#cli-user-data'>User Data</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#cli-terminate'>Terminate</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='cli-launch'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#cli-launch'>
+                    Launch
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  Launch is used to create a new EC2 instance.
+                </p>
+                <h4>Usage</h4>
+                <p class='api-copy'>
+                  <code>cloud-maker launch &lt;config_file.yaml&gt;</code>
+                </p>
+                <h4>Options</h4>
+                <ul class='api-list'>
+                  <li>
+                    <code>--aws-access-key-id=AWS_ACCESS_KEY_ID</code>
+                    Your AWS access key id
+                  </li>
+                  <li>
+                    <code>--aws-secret-access-key=AWS_SECRET_ACCESS_KEY</code>
+                    Your AWS secret access key
+                  </li>
+                  <li>
+                    <code>[--set=key:value [key:value]...]</code>
+                    Set parameters in the CloudMaker config
+                  </li>
+                  <li>
+                    <code>[--tags=key:value [key:value]...]</code>
+                    Set tags for EC2, merges with and overrides the tags property in the CloudMaker config
+                  </li>
+                  <li>
+                    <code>[--yes]</code>
+                    Answer yes, or accepts default values to any confirmation prompts automatically.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='cli-info'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#cli-info'>
+                    Info
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  Info retrieves the archived information that was stored when an instance was launched.
+                </p>
+                <h4>Usage</h4>
+                <p class='api-copy'>
+                  <code>cloud-maker info &lt;AWS instance ID&gt;</code>
+                </p>
+                <h4>Options</h4>
+                <ul class='api-list'>
+                  <li>
+                    <code>--aws-access-key-id=AWS_ACCESS_KEY_ID</code>
+                    Your AWS access key id
+                  </li>
+                  <li>
+                    <code>--aws-secret-access-key=AWS_SECRET_ACCESS_KEY</code>
+                    Your AWS secret access key
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='cli-user-data'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#cli-user-data'>
+                    User Data
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  User Data generates
+                  <a href='https://help.ubuntu.com/community/CloudInit'>CloudInit</a>
+                  user data for an instance. It can be used as a dry run or if you prefer
+                  to actually launch the instance using the Amazon console or another tool.
+                </p>
+                <h4>Usage</h4>
+                <p class='api-copy'>
+                  <code>cloud-maker user_data &lt;config_file.yaml&gt;</code>
+                </p>
+                <h4>Options</h4>
+                <ul class='api-list'>
+                  <li>
+                    <code>[--set=key:value [key:value]...]</code>
+                    Set parameters in the CloudMaker config
+                  </li>
+                  <li>
+                    <code>[--tags=key:value [key:value]...]</code>
+                    Merges with and overrides the tags property in the CloudMaker config. Since there is no actual EC2 instance created this is just a convenience setter for the tags custom property.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='cli-terminate'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#cli-terminate'>
+                    Terminate
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  Terminate will terminate an AWS instance after first displaying the info about how it was launched.
+                </p>
+                <h4>Usage</h4>
+                <p class='api-copy'>
+                  <code>cloud-maker terminate &lt;AWS instance ID&gt;</code>
+                </p>
+                <h4>Options</h4>
+                <ul class='api-list'>
+                  <li>
+                    <code>--aws-access-key-id=AWS_ACCESS_KEY_ID</code>
+                    Your AWS access key id
+                  </li>
+                  <li>
+                    <code>--aws-secret-access-key=AWS_SECRET_ACCESS_KEY</code>
+                    Your AWS secret access key
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <hr />
+          </div>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='span12'>
+          <div class='panel-padding'>
+            <div class='row-fluid api-doc' id='notes'>
+              <div class='span8'>
+                <h2>
+                  <a class='api-header-link' href='#notes'>
+                    Notes
+                  </a>
+                </h2>
+                <p class='api-copy'>
+                  The guiding principle behind
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  is to keep things simple and modular. The small piece of the puzzle that
+                  it tries to solve is launching an instance and pushing an initial
+                  configuration to it. If you see something missing suggestions on improvements
+                  are welcome, however where such improvements could be better made by providing a hook for integration with another tool that will be the preferred solution.
+                </p>
+              </div>
+              <div class='span3 offset1'>
+                <div class='panel-background-white panel-border summary'>
+                  <div class='panel-header panel-header-dark'>
+                    <h3>Table of Contents</h3>
+                  </div>
+                  <div class='panel-padding'>
+                    <ul class='unstyled'>
+                      <li class='pull-right'>
+                        <a href='#notes'>Summary</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#notes-suggestions'>Suggestions</a>
+                      </li>
+                      <li class='pull-right'>
+                        <a href='#notes-troubleshooting'>Troubleshooting</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='notes-suggestions'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#notes-suggestions'>
+                    Suggestions
+                  </a>
+                </h3>
+                <ul class='api-list'>
+                  <li>
+                    <a href='https://help.ubuntu.com/community/CloudInit'>Ubuntu CloudInit</a>
+                    provides the ability to pull shell scripts via HTTP and execute them at instance launch. This provides an excellent mechanism for doing customized build and configuration.
+                  </li>
+                  <li>
+                    There is a tool named
+                    <a href='https://github.com/solidsnack/arx'>ARX</a>
+                    that allows an executable script to be combined with a tarball of files
+                    making it easy to distribute packages of files with a built-in build script.
+                    These work very well as included scripts.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class='row-fluid api-doc' id='notes-troubleshooting'>
+              <div class='span12'>
+                <h3>
+                  <a class='api-header-link' href='#notes-troubleshooting'>
+                    Troubleshooting
+                  </a>
+                </h3>
+                <p class='api-copy'>
+                  By default it can be difficult to get good information about what may have gone wrong with a build process. Add the following to your
+                  <a class='cloud-maker-logo' href='/cloud-maker'>CloudMaker</a>
+                  configuration file generate a build log at&nbsp;<code>/var/log/cloud-init-output.log</code>.
+                </p>
+                <p class='api-copy'>
+                  <div class='filename'>&nbsp;</div>
+                  <pre class='prettyprint linenums lang-yaml quickstart-code'>output:&#x000A;  # generate a detailed log of the cloud init&#x000A;  all: '| tee -a /var/log/cloud-init-output.log'&#x000A;&#x000A;</pre>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js' type='text/javascript'></script>
+    <script src='assets/google-code-prettify/prettify.js'></script>
+    <script src='assets/js/vendor/ender.min.js' type='text/javascript'></script>
+    <script type='text/javascript'>
+      //<![CDATA[
+        ender.noConflict();    %script{:src => "assets/js/vendor/stdair.min.js", :type => "text/javascript"}
+      //]]>
+    </script>
+    <script src='assets/js/vendor/o2.min.js' type='text/javascript'></script>
+    <script type='text/javascript'>
+      //<![CDATA[
+        prettyPrint();
+        
+        !function(window, $) {
+          var $nav = $('.navbar'),
+              $win = $(window),
+              navTop = $nav.offset().top,
+              onTop = false,
+              checkScheduled = false;
+        
+          function checkNav() {
+            var top = $win.scrollTop();
+            if(navTop < top && !onTop) {
+              onTop = true;
+              $nav.addClass('navbar-fixed-top');
+              } else if(navTop >= top && onTop) {
+              $nav.removeClass('navbar-fixed-top');
+              onTop = false;
+            }
+          }
+        
+          $win.on('scroll', function() {
+            if(!checkScheduled) {
+              checkScheduled = true;
+              setTimeout(function() {
+                checkNav();
+                checkScheduled = false;
+              }, 100);
+            }
+          });
+        }(window, jQuery);
+      //]]>
+    </script>
+  </body>
+</html>
