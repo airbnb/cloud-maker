@@ -149,7 +149,7 @@ class CloudMakerCLI < Thor
     :alias => '-y',
     :type => :boolean,
     :default => false,
-    :desc => "Answer yes to any confirmation prompts automatically."
+    :desc => "Answer yes to any confirmation prompts and accept defaults automatically."
   def launch(instance_config_yaml)
     puts "--------------------------------------------------------------------------------".green
     puts "Launching new EC2 instance"
@@ -262,7 +262,11 @@ class CloudMakerCLI < Thor
         end
 
         if config.options[key]["default"]
-          config[key] = ask "Please choose a value for #{key.cyan} [#{config.options[key]["default"]}]:"
+          if options[:yes]
+            config[key] = config.options[key]["default"]
+          else
+            config[key] = ask "Please choose a value for #{key.cyan} [#{config.options[key]["default"]}]:"
+          end
         else
           config[key] = ask "Please choose a value for #{key.cyan}:"
         end

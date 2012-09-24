@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'cloud-maker'
-  s.version     = '0.6.1'
-  s.date        = '2012-08-31'
+  s.version     = '0.6.2'
+  s.date        = '2012-09-24'
   s.summary     = "Extends Ubuntu CloudInit to launch and configure cloud servers."
   s.authors     = ["Nathan Baxter", "Flo Leibert"]
   s.email       = 'nathan.baxter@airbnb.com'

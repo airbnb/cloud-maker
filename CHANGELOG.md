@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.6.2
+
+* Make the --yes option automatically accept defaults (as per it's documentation)
+
 ## 0.6.1
 
 * Added a changelog
