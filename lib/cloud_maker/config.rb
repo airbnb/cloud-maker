@@ -396,8 +396,9 @@ module CloudMaker
         }
         strings.join(';')
       else
+        underscored_key = key.to_s.gsub(/[^a-zA-Z0-9_]/, '_')
         escaped_value = value.to_s.gsub(/"/, '\\\\\\\\\"')
-        "echo \"#{key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
+        "echo \"#{underscored_key}=\\\"#{escaped_value}\\\"\" >> /etc/environment"
       end
     end
 
