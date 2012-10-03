@@ -394,6 +394,7 @@ module CloudMaker
         value.each_with_index { |arr_val, i|
           strings.push(set_environment_variable_cmd("#{key}_#{i}", arr_val))
         }
+        strings.push(set_environment_variable_cmd("#{key}_length", value.length))
         strings.join(';')
       else
         underscored_key = key.to_s.gsub(/[^a-zA-Z0-9_]/, '_')

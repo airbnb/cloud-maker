@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.7.0
+
+* Added a new environment variable for all array mappings "#{key}_length" that will hold the length of the array.
+
 ## 0.6.3
 
 * Properties with characters outside of [a-zA-Z0-9_] will have those characters converted to _ before being set as environment variables.
