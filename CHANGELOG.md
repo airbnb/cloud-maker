@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.0
+
+* Added support for block device mappings.
+
 ## 0.7.0
 
 * Added a new environment variable for all array mappings "#{key}_length" that will hold the length of the array.
