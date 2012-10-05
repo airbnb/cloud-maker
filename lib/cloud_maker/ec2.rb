@@ -42,6 +42,9 @@ module CloudMaker
         'cname' => {
           'default' => '',
           'description' => "A dns entry you would like to CNAME to this instance."
+        },
+        'block_device_mappings' => {
+          'description' => "A hash of block devices mappings. ie. { /dev/sda1 => { volume_size => <value_in_GB>, snapshot_id => <id>, delete_on_termination => <boolean> } }"
         }
       }
     }
@@ -107,7 +110,8 @@ module CloudMaker
       else
         region = ec2 # .instances.create will just put things in the default region
       end
-      instance = region.instances.create(
+
+      config = {
         :image_id => cloud_maker_config['ami'],
         :iam_instance_profile => cloud_maker_config['iam_role'],
         :security_groups => cloud_maker_config['security_group'],
@@ -115,7 +119,10 @@ module CloudMaker
         :key_name => cloud_maker_config['key_pair'],
         :availability_zone => cloud_maker_config['availability_zone'],
         :user_data => user_data
-      )
+      }
+      config[:block_device_mappings] = cloud_maker_config['block_device_mappings'] if cloud_maker_config['block_device_mappings']
+
+      instance = region.instances.create(config)
 
       begin
         instance.tags.set(cloud_maker_config['tags']) if cloud_maker_config['tags']
