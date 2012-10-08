@@ -125,7 +125,15 @@ module CloudMaker
       instance = region.instances.create(config)
 
       begin
-        instance.tags.set(cloud_maker_config['tags']) if cloud_maker_config['tags']
+        if cloud_maker_config['tags']
+          # we can only set tags to be strings so make sure we convert all of our tags
+          # to strings
+          string_tags = cloud_maker_config['tags'].inject({}) do |hash, pair|
+            hash[pair[0]] = pair[1].to_s
+            hash
+          end
+          instance.tags.set(string_tags)
+        end
       rescue AWS::EC2::Errors::InvalidInstanceID::NotFound => e
         retries ||= 0
         if retries < 5

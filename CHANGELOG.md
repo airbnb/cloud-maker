@@ -5,6 +5,7 @@
 * Added support for block device mappings.
 * Added support for deleting values when merging using "--" as a knockout prefix.
 * Shell commands will have leading and trailing whitespace removed
+* All tags will now be explictly converted to strings (AWS doesn't handle implicit conversion)
 
 ## 0.7.0
 
