@@ -3,6 +3,7 @@
 ## 0.8.0
 
 * Added support for block device mappings.
+* Added support for deleting values when merging using "--" as a knockout prefix.
 * Shell commands will have leading and trailing whitespace removed
 
 ## 0.7.0

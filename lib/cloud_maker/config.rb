@@ -407,6 +407,10 @@ module CloudMaker
     # precedence to all values set in this one. Arrays will be merged as
     # imported_array.concat(current_array).uniq.
     #
+    # "--" can be used as a knockout prefix, ie. "--foo" will delete the key "foo"
+    # when an array is merged, or "--" will delete the entire existing contents of
+    # the array.
+    #
     # It should be noted that this is not reference safe, ie. objects within
     # cloud_maker_config will end up referenced from this config object as well.
     #
@@ -414,11 +418,18 @@ module CloudMaker
     #
     # Returns nothing.
     def import(cloud_maker_config)
-      self.options = cloud_maker_config.options.deep_merge!(self.options)
-      self.includes = cloud_maker_config.includes.concat(self.includes).uniq
-      self.imports = cloud_maker_config.imports.concat(self.imports).uniq
-      self.cloud_config = cloud_maker_config.cloud_config.deep_merge!(self.cloud_config)
-      self.extra_options = cloud_maker_config.extra_options.deep_merge!(self.extra_options)
+      [:options, :includes, :imports, :cloud_config, :extra_options].each do |key|
+      key = key.to_sym
+      #toss both of these into a hash because deep_merge only works on hashes
+      cloud_maker_config_hash = {:value => cloud_maker_config.send(key)}
+      self_hash = {:value => self.send(key)}
+      self.send(
+        :"#{key}=",
+        cloud_maker_config_hash.deep_merge!(
+          self_hash, :preserve_unmergeables => false, :knockout_prefix => '--'
+        )[:value]
+      )
+      end
     end
   end
 end
