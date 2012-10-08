@@ -3,6 +3,7 @@
 ## 0.8.0
 
 * Added support for block device mappings.
+* Shell commands will have leading and trailing whitespace removed
 
 ## 0.7.0
 

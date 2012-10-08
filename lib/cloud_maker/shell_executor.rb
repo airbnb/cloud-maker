@@ -21,7 +21,7 @@ module CloudMaker
     end
 
     def execute
-      @result ||= `#{self.script}`.chomp
+      @result ||= `#{self.script}`.strip
     end
 
     def to_s
