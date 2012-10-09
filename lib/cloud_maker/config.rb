@@ -386,15 +386,21 @@ module CloudMaker
     # Returns a string that can be executed to globally set the environment variable.
     def set_environment_variable_cmd(key, value)
       if (value.kind_of?(Hash))
-        value.keys.map { |hash_key|
-          set_environment_variable_cmd("#{key}_#{hash_key}", value[hash_key])
-        }.join(';')
+        strings = []
+        value.keys.each { |hash_key|
+          strings.push(set_environment_variable_cmd("#{key}_#{hash_key}", value[hash_key]))
+        }
+        strings.push(set_environment_variable_cmd("#{key}_length", value.keys.join(' ')))
+        strings.push(set_environment_variable_cmd("#{key}_json", value.to_json))
+        strings.join(';')
+
       elsif (value.kind_of?(Array))
         strings = []
         value.each_with_index { |arr_val, i|
           strings.push(set_environment_variable_cmd("#{key}_#{i}", arr_val))
         }
         strings.push(set_environment_variable_cmd("#{key}_length", value.length))
+        strings.push(set_environment_variable_cmd("#{key}_json", value.to_json))
         strings.join(';')
       else
         underscored_key = key.to_s.gsub(/[^a-zA-Z0-9_]/, '_')

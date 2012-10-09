@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.9.0
+
+* Added an environment variable for all hash mappings "#{key}_keys" that will hold the keys in the hash.
+* Added an environment variable for hash and array mappings "#{key}_json" that stores a JSON dump of the hash or array.
+
 ## 0.8.0
 
 * Added support for block device mappings.
