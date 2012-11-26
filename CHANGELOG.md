@@ -1,4 +1,6 @@
 # Change Log
+## 0.9.0
+* Added elb support to attach new instances.
 
 ## 0.9.0
 
