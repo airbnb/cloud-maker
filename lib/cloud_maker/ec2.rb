@@ -45,6 +45,10 @@ module CloudMaker
         },
         'block_device_mappings' => {
           'description' => "A hash of block devices mappings. ie. { /dev/sda1 => { volume_size => <value_in_GB>, snapshot_id => <id>, delete_on_termination => <boolean> } }"
+        },
+        'elb' => {
+          'default' => '',
+          'description' => "The load balancer to use."
         }
       }
     }
@@ -172,6 +176,18 @@ module CloudMaker
         end
       end
 
+      if cloud_maker_config.elb?
+        while instance.status == :pending
+          #wait
+        end
+        elb_interface = ElbInterface.new(
+          :instance => instance,
+          :aws_access_key_id => self.aws_access_key_id,
+          :aws_secret_access_key => self.aws_secret_access_key,
+          :elb_name => cloud_maker_config["elb"]
+        ).attach
+      end
+      
       archiver = S3Archiver.new(
         :instance_id => instance.id,
         :aws_access_key_id => self.aws_access_key_id,
