@@ -126,7 +126,7 @@ The CLI is implemented in Thor and help information for any command can be acces
 
 ## Caveats
 
-* We chose to build our own tool rather than lean on an existing tool (ie. Chef/Opscode) because we wanted to be able to rely as much as possible on our existing configuration infrastructure and to use a small and simple tool rather than bringing in a signficant new source of complexity.
+* We chose to build our own tool rather than lean on an existing tool (ie. Chef/Opscode) because we wanted to be able to rely as much as possible on our existing configuration infrastructure and to use a small and simple tool rather than bringing in a significant new source of complexity.
 * The !shell-script functionality provides a window into existing configuration tools, in particular s3dist which can be used to generate the ```include``` property of the config file.
 
 ## Testability
